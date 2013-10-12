@@ -5,6 +5,8 @@
 #include <string>
 #include <cstdlib>
 #include <cctype>
+#include <ctime>
+#include <vector>
 
 using namespace std;
 
@@ -121,16 +123,43 @@ inline void printError(const string& line, const int& lineNo) {
 	fprintf(stderr, "Error %d: %s", lineNo, line.c_str());
 }
 
+inline vector<string> split(const string& s, const char delim) {
+	vector<string> res;
+	string tmp;
+	
+	for (int i = 0; i < s.length(); ++i) {
+		if (s[i] == delim) {
+			res.push_back(tmp);
+			tmp.clear();
+		} else tmp.push_back(s[i]);
+	}
+	
+	return res;
+}
+
 inline const bool isUnsignedNumber(const string& txt) {
 	//TODO walidacja numeru
 }
 
-inline const bool validateTrainId(const string& trainId) {
-	//TODO walidacja id pociągu (max 9 cyfr)
-}
-
+//waliduje datę
 inline const bool validateDate(const string& date) {
-	//TODO walidacja daty
+	vector<string> s = split(date, '.');
+	if (s.size() != 3)
+		return false;
+	
+	unsigned short int tmp[3] = {2, 2, 4};
+	for (int i = 0; i < 3; ++i) {
+		if (s[i].empty() || !isUnsignedNumber(s[i]) || s[i].length() > tmp[i])
+			return false;
+		tmp[i] = atoi(s[i].c_str());
+	}
+	
+	tm timeinfo;
+	timeinfo.tm_mday = tmp[0];
+	timeinfo.tm_mon = tmp[1] - 1;
+	timeinfo.tm_year = tmp[2] - 1900;
+	
+	return mktime(&timeinfo) != -1;
 }
 
 //zwraca <-1, -1>, jeśli godzina niepoprawna,w innym przypadku zwraca <h, m>
@@ -293,10 +322,7 @@ inline void processTrains() {
 //koniec walidacji
 
 int main() {
-	//TODO parsowanie: 
 	processTrains();	//lubię takie "jednolinijkowe" programy ;D
-	//czytamy linię (trzeba jeszcze wymyślić jak to robić sensownie)
-	//parsujemy
 
 	return 0;
 }
