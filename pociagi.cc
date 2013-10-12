@@ -69,7 +69,6 @@ inline const void updateS(){
 }
 
 inline const TrainNo& queryL(Hour b, Hour e) {
-	//TODO operacja obliczania liczby pociagów które przejechaly przez posterunek na przedziale [b; e] (ogolna idea: l[e]-l[b-1]);
         return l[e] - (b>0 ? l[b-1] : 0);
 }
 
@@ -78,23 +77,17 @@ inline const Delay& queryM(Hour b, Hour e) {
 }
 
 inline const Delay& queryS(Hour b, Hour e) {
-	//TODO operacja obliczania sumy opóźnień na przedziale [b; e] (Ogólna idea: s[e]-s[b-1]);
         return s[e] - (b>0 ? s[b-1] : 0);
 
 }
 
 inline void addTrain(const Hour &h, const Delay &d) {
-	//TODO dodawanie pociągu do struktur
-	//w szczególności do drzewa przedziałowego:
-        
         addTrainL(h,d);
 	insert(h, d);
         addTrainS(h,d);
 }
 
 inline void printError(const string& line, const int& lineNo) {
-	//TODO wypisywanie błędnej linii
-	//w osobnej funkcji dlatego, żeby w razie potrzeby łatwo to było zmienić/użyć w wielu miejscach
   std::cerr<<"Error "<<lineNo<<": "<<line<<"\n";
 }
 
@@ -106,9 +99,10 @@ int main() {
 	//	printError(line);
 	//else {
 	//	if (to jest pociąg)
-	//		addTrain(godzina przyjazdu + opóźnienie, opóźnienie);
+	//		addTrain(godzina przyjazdu, opóźnienie);
 	//	else
 	//		cout << query(pocz, koniec);
 	//}
+
 	return 0;
 }
