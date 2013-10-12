@@ -28,10 +28,10 @@ TrainNo l[DAYSIZE];
 Delay s[DAYSIZE];
 
 inline const void addTrainL(const Hour &h,const Delay &d){
-  l[(h+d)%DAYSIZE]++; 
+  l[h]++; 
 }
 inline const void addTrainS(const Hour &h, const Delay &d){
-  s[(h+d)%DAYSIZE]+=d;
+  s[h]+=d;
 }
 inline const void updateL(){
   int suma =0;
