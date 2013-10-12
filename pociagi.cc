@@ -33,21 +33,6 @@ inline const void addTrainL(const Hour &h,const Delay &d){
 inline const void addTrainS(const Hour &h, const Delay &d){
   s[(h+d)%DAYSIZE]+=d;
 }
-
-inline const void updateData(){
-  // Kiedy skonczymy wczytywać dane o pociagach wywolujemy tę funkcje. 
-  // Ona reorganizuje nam struktury.
-  // Liczy sie tablica prefiksowa l;
-  // Liczy sie drzewko podzialowe tree;
-  // Liczy sie tablica prefiksowa s;
-
-  updateL();
-  updateM();
-  updateS();
-}
-
-
-
 inline const void updateL(){
   int suma =0;
   for(int i=0;i<DAYSIZE;i++){
@@ -66,7 +51,23 @@ inline const void updateS(){
     suma+=s[i];
     s[i]=suma;
   }
+} 
+
+inline const void updateData(){
+  // Kiedy skonczymy wczytywać dane o pociagach wywolujemy tę funkcje. 
+  // Ona reorganizuje nam struktury.
+  // Liczy sie tablica prefiksowa l;
+  // Liczy sie drzewko podzialowe tree;
+  // Liczy sie tablica prefiksowa s;
+
+  updateL();
+  updateM();
+  updateS();
 }
+
+
+
+
 
 inline const TrainNo& queryL(Hour b, Hour e) {
         return l[e] - (b>0 ? l[b-1] : 0);
@@ -78,7 +79,6 @@ inline const Delay& queryM(Hour b, Hour e) {
 
 inline const Delay& queryS(Hour b, Hour e) {
         return s[e] - (b>0 ? s[b-1] : 0);
-
 }
 
 inline void addTrain(const Hour &h, const Delay &d) {
