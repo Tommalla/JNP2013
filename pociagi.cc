@@ -92,9 +92,10 @@ inline void addTrain(const Hour &h, const Delay &d) {
         addTrainS(h,d);
 }
 
-inline void printError(const string& line) {
+inline void printError(const string& line, const int& lineNo) {
 	//TODO wypisywanie błędnej linii
 	//w osobnej funkcji dlatego, żeby w razie potrzeby łatwo to było zmienić/użyć w wielu miejscach
+  std::cerr<<"Error "<<lineNo<<": "<<line<<"\n";
 }
 
 int main() {
