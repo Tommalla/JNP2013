@@ -14,3 +14,6 @@ pociagi
 *.lai
 *.la
 *.a
+
+.kate*
+*kate*

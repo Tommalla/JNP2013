@@ -1,8 +1,9 @@
 /* Tomasz Zakrzewski i Maciej Dmowski /
 /  JNP 2013/2014, Projekt 1 */
-#include <iostream>
+#include <cstdio>
 #include <climits>
 #include <string>
+#include <cstdlib>
 
 using namespace std;
 
@@ -13,7 +14,11 @@ typedef unsigned short int TrainNo;
 const Delay MAX_DELAY = USHRT_MAX;	//do walidacji opóźnienia
 const int BASE = 2048;
 const int DAYSIZE = 1440;
-const int STRLEN_LIMIT = 10;
+//limity na długości stringów
+const int TRAIN_ID_LIMIT = 9;
+const int DATE_LIMIT = 10;
+const int TIME_LIMIT = 5;
+const int DELAY_LIMIT = 6;	//nawet trochę na wyrost
 const int BUFFER_SIZE = 8;	//FIXME przemyśl rozmiar bufora
 
 //drzewo przedziałowe typu max
@@ -86,7 +91,7 @@ inline const void updateData(){
 }
 
 
-inline const TrainNo& queryL(Hour b, Hour e) {
+inline const TrainNo queryL(Hour b, Hour e) {
 	//operacja obliczania liczby pociagów które przejechaly przez posterunek na przedziale [b; e] (ogolna idea: l[e]-l[b-1]);
         return l[e] - (b>0 ? l[b-1] : 0);
 }
@@ -109,7 +114,7 @@ inline void addTrain(const Hour &h, const Delay &d) {
 
 //walidacja i parsowanie
 inline void printError(const string& line, const int& lineNo) {
-	std::cerr<<"Error "<<lineNo<<": "<<line<<"\n";
+	fprintf(stderr, "Error %d: %s", lineNo, line.c_str());
 }
 
 inline const bool isUnsignedNumber(const string& txt) {
@@ -135,29 +140,71 @@ inline const Hour convertToMinutes(const Hour& h, const Hour& m) {
 
 //newline - czy oczekujemy nowej linii?
 //jeśli tak, to funkcja tylko do niej przeskoczy
-//przy jakimkolwiek błędzie odczytu (brak lub nadmiar danych), funkcja zwróci pustego stringa
-inline string getNextInputString(const bool& newline = false) {
+//przy braku danych zwróci pustego stringa
+//przy nadmiarze danych zwróci "e"
+inline string getNextInputString(string& soFar, int& lineId, const int lengthLimit, const bool& newline = false) {
 	//TODO składanie kolejnego inputowego stringa z wejściowego bufora
 	static char buffer[BUFFER_SIZE];
 	static unsigned short int id;
-	//FIXME: to trzeba głęboko przemyśleć
-	//(globalny bufor? statyczna historia buforów? string na historię?)
+	//jeśli można wczytać - wczytujemy. Jeśli więcej znaków niż limit, wypisujemy error
+}
+
+inline void processQueries(const string& lastCommand, string& soFar, int& lineId) {
+	string command = lastCommand, begin, end;
+	
+	while (!command.empty()) {
+		//walidacja, parsowanie i obsługa zapytań
+		
+		getNextInputString(soFar, lineId, 0, true);	//omiń znak nowej linii
+		command = getNextInputString(soFar, lineId, 1);
+	}
+	//TODO wczytywanie zapytań i wykonywanie ich
+}
+
+inline void processTrains() {
+	//wczytywanie kolejnych pociągów
+	string trainId, date, hour, delay, soFar;
+	int lineId = 0;
+	
+	trainId = getNextInputString(soFar, lineId, TRAIN_ID_LIMIT);
+	while (!trainId.empty() && trainId != "L" && trainId != "M" && trainId != "S") {
+		date = getNextInputString(soFar, lineId, DATE_LIMIT);
+		if (date != "e") {
+			hour = getNextInputString(soFar, lineId, TIME_LIMIT);
+			
+			if (hour != "e") {
+				delay = getNextInputString(soFar, lineId, DELAY_LIMIT);
+			
+				if (delay != "e" && getNextInputString(soFar, lineId, 0).empty()) {	//na etapie samego czytania ilość słów
+				//pora na walidację					//się zgadza i żadne nie jest dłuższe niż może być
+					pair<int, int> h = parseHour(hour);
+					if (h.first == -1 || !validateTrainId(trainId) || !validateDate(date) || !isUnsignedNumber(delay)) {	//dane się nie walidują
+						printError(soFar, lineId);
+						fprintf(stderr, "\n");
+					} else {	//dane się walidują
+						int d = atoi(delay.c_str());
+						addTrain((convertToMinutes(h.first, h.second) + d) % DAYSIZE, d);
+					}
+				}
+			}
+		}
+		
+		getNextInputString(soFar, lineId, 0, true);	//skocz do nowej linii
+		trainId = getNextInputString(soFar, lineId, TRAIN_ID_LIMIT);
+	}
+	
+	//jak pojawia się pierwszy nie-pociąg(query)
+	updateData();
+	processQueries(trainId, soFar, lineId);
 }
 
 //koniec walidacji
 
 int main() {
 	//TODO parsowanie: 
+	processTrains();	//lubię takie "jednolinijkowe" programy ;D
 	//czytamy linię (trzeba jeszcze wymyślić jak to robić sensownie)
 	//parsujemy
-	//if (niepoprawna linia)
-	//	printError(line);
-	//else {
-	//	if (to jest pociąg)
-	//		addTrain(godzina przyjazdu, opóźnienie);
-	//	else
-	//		cout << query(pocz, koniec);
-	//}
 
 	return 0;
 }
