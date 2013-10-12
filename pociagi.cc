@@ -4,14 +4,18 @@
 #include <climits>
 #include <string>
 #include <cstdlib>
+#include <cctype>
 
 using namespace std;
 
 typedef unsigned short int Delay;	//typedef, bo można łatwo zmodyfikować
-typedef unsigned short int Hour;
+typedef short int Hour;
 typedef unsigned short int TrainNo;
+typedef unsigned long long int Result;
 
+const char* RESULT_FORMAT = "%llu\n";
 const Delay MAX_DELAY = USHRT_MAX;	//do walidacji opóźnienia
+
 const int BASE = 2048;
 const int DAYSIZE = 1440;
 //limity na długości stringów
@@ -142,50 +146,138 @@ inline const Hour convertToMinutes(const Hour& h, const Hour& m) {
 //jeśli tak, to funkcja tylko do niej przeskoczy
 //przy braku danych zwróci pustego stringa
 //przy nadmiarze danych zwróci "e"
+//FIXME pytanie czy da się bez wskaźników wydzielić doczytywanie bufora do zewnętrznej metody (chyba, że bufor zrobimy globalny)
 inline string getNextInputString(string& soFar, int& lineId, const int lengthLimit, const bool& newline = false) {
 	//TODO składanie kolejnego inputowego stringa z wejściowego bufora
 	static char buffer[BUFFER_SIZE];
-	static unsigned short int id;
-	//jeśli można wczytać - wczytujemy. Jeśli więcej znaków niż limit, wypisujemy error
+	static unsigned short int id, size;
+	
+	if (lineId == -1) {	//inicjalizacja
+		lineId = 0;
+		size = fread(buffer, 1, BUFFER_SIZE, stdin);
+	}
+	
+	//przechodzimy przez białe znaki
+	while (isspace(buffer[id]) && buffer[id] != '\n') {
+		++id;
+		if (id >= size) {
+			soFar += buffer;
+			size = fread(buffer, 1, BUFFER_SIZE, stdin);
+			id = 0;
+		}
+	}
+	
+	//kolejny znak, to albo początek stringa, albo znak nowej linii
+	if (buffer[id] == '\n') {
+		if (newline) {
+			++id;
+			if (id >= size) {
+				soFar += buffer;
+				size = fread(buffer, 1, BUFFER_SIZE, stdin);
+				id = 0;
+			}
+		}
+		return "";	//niezależnie, czy omijamy nl czy nie, wynik to pusty ciąg
+	}
+	
+	//kolejny znak musi być początkiem stringa
+	string res = "";
+	while (!isspace(buffer[id]) && res.length() <= lengthLimit) {
+		res.push_back(buffer[id]);
+		++id;
+		if (id >= size) {
+			soFar += buffer;
+			size = fread(buffer, 1, BUFFER_SIZE, stdin);
+			id = 0;
+		}
+	}
+	
+	if (res.length() > lengthLimit || newline) {	//więcej znaków niż limit, lub znaki, tam gdzie nie powinno ich być
+		soFar += res;
+		printError(res, lineId);
+		while (buffer[id] != '\n') {
+			fputc(buffer[id], stderr);
+			++id;
+			if (id >= size) {
+				soFar += buffer;
+				size = fread(buffer, 1, BUFFER_SIZE, stdin);
+				id = 0;
+			}
+		}
+		return "e";
+	} else
+		return res;
 }
 
 inline void processQueries(const string& lastCommand, string& soFar, int& lineId) {
-	string command = lastCommand, begin, end;
+	string command = lastCommand;
+	string data[2];
 	
 	while (!command.empty()) {
-		//walidacja, parsowanie i obsługa zapytań
+		int i = 0;
+		for (; i < 2; ++i)
+			if ((data[i] = getNextInputString(soFar, lineId, TIME_LIMIT)) == "e")
+				break;
+			
+		if (i == 2 && getNextInputString(soFar, lineId, 0).empty()) {	//na etapie samego czytania wszystko się powiodło
+			//walidacja i obsługa zapytań
+			pair<Hour, Hour> begin = parseHour(data[0]), end = parseHour(data[1]);
+
+			if (begin.first == -1 || begin.second == -1 || 
+				!(command == "L" || command == "M" || command == "S")) {	//dane się nie walidują
+				printError(soFar, lineId);
+				fprintf(stderr, "\n");
+			} else {
+				Result res;
+				Hour b = convertToMinutes(begin.first, begin.second), 
+					e = convertToMinutes(end.first, end.second);
+					
+				switch (command[0]) {
+					case 'L':
+						res = queryL(b, e);
+						break;
+					case 'M':
+						res = queryM(b, e);
+						break;
+					case 'S':
+						res = queryS(b, e);
+						break;
+				}
+					
+				printf(RESULT_FORMAT, res);
+			}
+		}
 		
 		getNextInputString(soFar, lineId, 0, true);	//omiń znak nowej linii
 		command = getNextInputString(soFar, lineId, 1);
 	}
-	//TODO wczytywanie zapytań i wykonywanie ich
 }
 
 inline void processTrains() {
 	//wczytywanie kolejnych pociągów
-	string trainId, date, hour, delay, soFar;
-	int lineId = 0;
+	string trainId, soFar;
+	string data[3];
+	unsigned short int limits[3] = {DATE_LIMIT, TIME_LIMIT, DELAY_LIMIT};
+	int lineId = -1;
 	
 	trainId = getNextInputString(soFar, lineId, TRAIN_ID_LIMIT);
-	while (!trainId.empty() && trainId != "L" && trainId != "M" && trainId != "S") {
-		date = getNextInputString(soFar, lineId, DATE_LIMIT);
-		if (date != "e") {
-			hour = getNextInputString(soFar, lineId, TIME_LIMIT);
+	while (!trainId.empty() && trainId != "L" && trainId != "M" && trainId != "S") {	//dopóki coś jest na wejściu i nie jest poleceniem
+		if (trainId != "e") {
+			int i = 0;
+			for (; i < 3; ++i) //wczytywanie
+				if ((data[i] = getNextInputString(soFar, lineId, limits[i])) == "e")
+					break;
 			
-			if (hour != "e") {
-				delay = getNextInputString(soFar, lineId, DELAY_LIMIT);
-			
-				if (delay != "e" && getNextInputString(soFar, lineId, 0).empty()) {	//na etapie samego czytania ilość słów
+			if (i == 3 && getNextInputString(soFar, lineId, 0).empty()) {	//na etapie samego czytania ilość słów
 				//pora na walidację					//się zgadza i żadne nie jest dłuższe niż może być
-					pair<int, int> h = parseHour(hour);
-					if (h.first == -1 || !validateTrainId(trainId) || !validateDate(date) || !isUnsignedNumber(delay)) {	//dane się nie walidują
-						printError(soFar, lineId);
-						fprintf(stderr, "\n");
-					} else {	//dane się walidują
-						int d = atoi(delay.c_str());
-						addTrain((convertToMinutes(h.first, h.second) + d) % DAYSIZE, d);
-					}
-				}
+				pair<Hour, Hour> h = parseHour(data[1]);
+				int d;
+				if (h.first == -1 || !isUnsignedNumber(trainId) || !validateDate(data[0]) || !isUnsignedNumber(data[2]) || 
+					(d = atoi(data[2].c_str())) > MAX_DELAY) {	//dane się nie walidują
+					printError(soFar, lineId);
+					fprintf(stderr, "\n");
+				} else	//dane się walidują
+					addTrain((convertToMinutes(h.first, h.second) + d) % DAYSIZE, d);
 			}
 		}
 		
