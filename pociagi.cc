@@ -15,14 +15,14 @@ typedef unsigned short int TrainNo;
 
 const Delay MAX_DELAY = USHRT_MAX;	//do walidacji opóźnienia
 
-//cała impelementacja drzewa przedziałowego zaczyna się tu
-Delay tree[2 * BASE + 10];
+Delay tree[2 * BASE + 10];	//drzewo przedziałowe typu max
 
-inline void insert(Hour h, const Delay &d) {
-	//TODO operacja insert w drzewie
+inline void insert(Hour h, const Delay &d) {	//dodawanie opóźnienia do drzewa przedz.
+	h += BASE;
+	
+	for (; h > 0 && tree[h] < d; h /= 2)
+		tree[h] = d;
 }
-
-//tutaj konczy sie implementacja drzewa przedziałowego;
 
 TrainNo l[DAYSIZE];
 Delay s[DAYSIZE];
@@ -34,7 +34,7 @@ inline const void addTrainS(const Hour &h, const Delay &d){
   s[(h+d)%DAYSIZE]+=d;
 }
 
-inline const void updateData(){
+inline const void updateData() {
   // Kiedy skonczymy wczytywać dane o pociagach wywolujemy tę funkcje. 
   // Ona reorganizuje nam struktury.
   // Liczy sie tablica prefiksowa l;
@@ -42,11 +42,8 @@ inline const void updateData(){
   // Liczy sie tablica prefiksowa s;
 
   updateL();
-  updateM();
   updateS();
 }
-
-
 
 inline const void updateL(){
   int suma =0;
@@ -54,10 +51,6 @@ inline const void updateL(){
     suma+=l[i];
     l[i]=suma;
   }
-}
-
-inline const void updateM(){
-    //TODO operacja tworzenia drzewa podzialowego na podstawie wczesniej wczytanych danych;
 }
 
 inline const void updateS(){
@@ -69,23 +62,35 @@ inline const void updateS(){
 }
 
 inline const TrainNo& queryL(Hour b, Hour e) {
-	//TODO operacja obliczania liczby pociagów które przejechaly przez posterunek na przedziale [b; e] (ogolna idea: l[e]-l[b-1]);
+	//operacja obliczania liczby pociagów które przejechaly przez posterunek na przedziale [b; e] (ogolna idea: l[e]-l[b-1]);
         return l[e] - (b>0 ? l[b-1] : 0);
 }
 
+//operacja obliczania max opóźnienia na przedziale [b; e] (drzewo przedziałowe)
 inline const Delay& queryM(Hour b, Hour e) {
-	//TODO operacja obliczania max opóźnienia na przedziale [b; e] (drzewo przedziałowe)
+	b += BASE;
+	e += BASE;
+	
+	Delay res = max(tree[b], tree[e]);
+	
+	while (b / 2 != e / 2) {
+		if (b % 2 == 0)
+			res = max(res, tree[b + 1]);	//lewy kraniec, bierzemy prawego brata
+		if (e % 2 == 1)
+			res = max(res, tree[e - 1]);	//prawy kraniec, bierzemy lewego brata
+	}
+	
+	return res;
 }
 
 inline const Delay& queryS(Hour b, Hour e) {
-	//TODO operacja obliczania sumy opóźnień na przedziale [b; e] (Ogólna idea: s[e]-s[b-1]);
+	//operacja obliczania sumy opóźnień na przedziale [b; e] (Ogólna idea: s[e]-s[b-1]);
         return s[e] - (b>0 ? s[b-1] : 0);
 
 }
 
 inline void addTrain(const Hour &h, const Delay &d) {
-	//TODO dodawanie pociągu do struktur
-	//w szczególności do drzewa przedziałowego:
+	//dodawanie pociągu do struktur
         
         addTrainL(h,d);
 	insert(h, d);
