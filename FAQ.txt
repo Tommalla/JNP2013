@@ -1,0 +1,43 @@
+
+===============================================================================================================================================
+Pytanie : Na przykładzie widać, że dzień/miesiąc może być reprezentowany zarówno jako 0x jak i x. Co z rokiem? Czy dopuszczamy tylko 4-cyfrowe? Nie jest to sprecyzowane także w stosunku do godziny. Czy zarówno 03:35 jak i 3:35 są poprawne czy tylko 3.35?
+
+ODPOWIEDZ: Pierwsze pociągi pojawiły się po roku 1800. Czy po roku 9999 będą jeszcze pociągi? Nie umiem odpowiedzieć na to pytanie. Zresztą nie tu należy szukać potencjalnych problemów. Poprawność podanych w pytaniu czasów daje się wywnioskować z treści zadania. Proszę uważnie przeczytać.
+===============================================================================================================================================
+
+MARPE: Trudno jest określić twardą wartość maksymalnego opóźnienia. Zapewne chciałby Pan, abym podał liczbę K, taką że opóźnienie K minut jest dopuszczalne, ale K+1 minut już nie. Wydaje się, że sensowne wartości opóźnień nie przekroczą kilku tysięcy minut. Ustalenie dokładnej wartości K jest dużo mniej istotne od zapewnienia, aby program dla każdych danych wejściowych zachowywał się sensownie. Dla mnie poprawne rozwiązanie tego problemu jest następujące. Programista musi podjąć decyzję, jak reprezentować w programie wartości opóźnień. W jednym z zespołów podejrzałem, że zmienne przechowujące opoźnienia są typu unsigned short. Nie przesądzam, że jest to najlepszy i jedyny dobry wybór, ale dla ustalenia uwagi przyjmijmy takie rozwiązanie. Typ unsigned short na maszynie students pozwala przechowywać wartości od 0 do 65535. Przyjmijmy, że do walidacji danych wejściowych korzystamy z wyrażeń regularnych. Wyrażenie regularne rozpoznające taki przedział liczb będzie dość skomplikowane. Znacznie łatwiej jest napisać i testować wyrażenie akceptujące liczby od 0 do 9999. Jeśli wtedy użytkownik wpisze większą wartość, to program zasygnalizuje to komunikatem o błędzie. Jeśli okaże się, że użytkownik potrzebuje większego zakresu, to będziemy musieli zmodyfikować implementację (dobra implementacje nie powinna wymagać zbyt wielu modyfikacji). Będziemy musieli dodatkowo popracować, ale nie ma tragedii. Znacznie gorsza jest sytuacja, gdy wewnętrzną reprezentacją jest nadal unsigned short, a program akceptuje niereprezentowalne wartości, np. użytkownik pomyłkowo zamiast 8000 wpisał 80000. Jaka wartość zostanie użyta w obliczeniach? 80000 mod 65536? Wynik obliczeń jest niepoprawny i jest to błąd trudny do uchwycenia (wynik obiczeń dla danych zawierających setki rekordów będzie zapewne wyglądał sensownie).
+===============================================================================================================================================
+MARPE: Nie można założyć, że w danych wejściowych linia ma maksymalnie n znaków. W programie należy przyjąć jakieś sensowne ograniczenie dla długości linii wejściowej.
+===============================================================================================================================================
+MARPE:Zgodnie z treścią zadania błędne linie należy wyświetlać w oryginalnej postaci, czyli w całości i niezmienione.
+===============================================================================================================================================
+MARPE: Liczyłem, że po długim wyjaśnieniu na temat maksymalnego ograniczenia dla opóźnienia już nie będzie podobnych pytań. Czy coś nadal nie jest jasne?
+
+Nie zakładamy, że linia mieści się w pamięci.
+
+Ktoś inny mógłby zapytać: co to jest string::max_size? Nie zakładamy takiego ograniczenia na długość linii.
+
+===============================================================================================================================================
+MarPe: Tak. Cytując słownik języka polskiego: kilkucyfrowy <<składający się z kilku cyfr>>; kilka <<zaimek liczebny nieokreślony oznaczający w sposób przybliżony liczbę od 3 do 9>>.
+===============================================================================================================================================
+PYATNIE: Gwoli ścisłości: czy pusty wiersz (zawierający tylko białe znaki) - np. "     " lub "\n" jest błędny?
+
+Z jednej strony mamy tylko dwa typy wierszy, z drugiej natomiast "Białe
+znaki mogą występować również na początku i na końcu wiersza." - jednak po pierwszym '\n' na końcu wiersza kolejny biały znak '\n' odwołuje się do kolejnego wiersza.
+
+Odpowiedz:Przyjmijmy, że pusty wiersz, ewentualnie składający się z samych białych znaków, jest błędny.
+===============================================================================================================================================
+PYTANIE: Jak należy potraktować rozkaz z przedziałem czasu T_p > T_k ?
+
+ODPOWIEDZ:Rozkaz z przedziałem czasu T_p > T_k należy potraktować jako błędny i wypisać stosowny komunikat o błędzie.
+===============================================================================================================================================
+Pytanie: 1) Czy podanie liczby oznaczającej opóźnienie równej 0 jest błędnym wejściem?
+
+2) Czy podanie ujemnej liczby oznaczającej opóźnienie (w domyśle - pociąg przyjechał przed czasem) jest błędnym wejściem?
+
+Odpowiedz: Opóźnienie o wartości 0 jest poprawnym wejściem.
+
+Na porządnych kolejach nie ma ujemnych opóźnień. ;-) Należy takie opóźnienie potraktować jako błędne wejście.
+===============================================================================================================================================
+
+
