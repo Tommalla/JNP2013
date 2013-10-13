@@ -138,7 +138,10 @@ inline vector<string> split(const string& s, const char delim) {
 }
 
 inline const bool isUnsignedNumber(const string& txt) {
-	//TODO walidacja numeru
+	for (int i = 0; i < txt.length(); ++i)
+		if (!isdigit(txt[i]))
+			return false;
+	return true;
 }
 
 //waliduje datę
@@ -164,20 +167,35 @@ inline const bool validateDate(const string& date) {
 
 //zwraca <-1, -1>, jeśli godzina niepoprawna,w innym przypadku zwraca <h, m>
 inline const pair<Hour, Hour> parseHour(const string& hour) {
-	//TODO walidacja godziny i parsowanie
+	vector<string> s = split(hour, '.');
+	if (s.size() != 2)
+		return make_pair(-1, -1);
+	
+	int tmp[2] = {1, 2};
+	
+	for (int i = 0; i < 2; ++i) {
+		if (s[i].length() > 2 || s[i].length() < tmp[i] || !isUnsignedNumber(s[i]))
+			return make_pair(-1, -1);
+		tmp[i] = atoi(s[i].c_str());
+	}
+	
+	if (tmp[0] > 23 || tmp[1] > 59)
+		tmp[0] = tmp[1] = -1;
+	
+	return make_pair(tmp[0], tmp[1]);
 }
 
 inline const Hour convertToMinutes(const Hour& h, const Hour& m) {
-	//TODO konwersja z h:m do ilości minut od północy
+	//konwersja z h:m do ilości minut od północy
+	return (h * 60 + m) % DAYSIZE;
 }
 
 //newline - czy oczekujemy nowej linii?
 //jeśli tak, to funkcja tylko do niej przeskoczy
 //przy braku danych zwróci pustego stringa
 //przy nadmiarze danych zwróci "e"
-//FIXME pytanie czy da się bez wskaźników wydzielić doczytywanie bufora do zewnętrznej metody (chyba, że bufor zrobimy globalny)
 inline string getNextInputString(string& soFar, int& lineId, const int lengthLimit, const bool& newline = false) {
-	//TODO składanie kolejnego inputowego stringa z wejściowego bufora
+	//składanie kolejnego inputowego stringa z wejściowego bufora
 	static char buffer[BUFFER_SIZE];
 	static unsigned short int id, size;
 	
@@ -188,10 +206,11 @@ inline string getNextInputString(string& soFar, int& lineId, const int lengthLim
 	
 	//przechodzimy przez białe znaki
 	while (isspace(buffer[id]) && buffer[id] != '\n') {
+		soFar.push_back(buffer[id]);
 		++id;
 		if (id >= size) {
-			soFar += buffer;
-			size = fread(buffer, 1, BUFFER_SIZE, stdin);
+			if ((size = fread(buffer, 1, BUFFER_SIZE, stdin)) == 0)
+				return "";
 			id = 0;
 		}
 	}
@@ -201,11 +220,14 @@ inline string getNextInputString(string& soFar, int& lineId, const int lengthLim
 		if (newline) {
 			++id;
 			if (id >= size) {
-				soFar += buffer;
-				size = fread(buffer, 1, BUFFER_SIZE, stdin);
+				if ((size = fread(buffer, 1, BUFFER_SIZE, stdin)) == 0)
+					return "";
 				id = 0;
 			}
 		}
+		
+		soFar.clear();
+		lineId++;
 		return "";	//niezależnie, czy omijamy nl czy nie, wynik to pusty ciąg
 	}
 	
@@ -215,8 +237,8 @@ inline string getNextInputString(string& soFar, int& lineId, const int lengthLim
 		res.push_back(buffer[id]);
 		++id;
 		if (id >= size) {
-			soFar += buffer;
-			size = fread(buffer, 1, BUFFER_SIZE, stdin);
+			if ((size = fread(buffer, 1, BUFFER_SIZE, stdin)) == 0)
+				return res;
 			id = 0;
 		}
 	}
@@ -225,11 +247,12 @@ inline string getNextInputString(string& soFar, int& lineId, const int lengthLim
 		soFar += res;
 		printError(res, lineId);
 		while (buffer[id] != '\n') {
+			soFar.push_back(buffer[id]);	//FIXME niekoniecznie potrzebne tu, ale konsekwentnie
 			fputc(buffer[id], stderr);
 			++id;
 			if (id >= size) {
-				soFar += buffer;
-				size = fread(buffer, 1, BUFFER_SIZE, stdin);
+				if ((size = fread(buffer, 1, BUFFER_SIZE, stdin)) == 0)
+					return "e";
 				id = 0;
 			}
 		}
