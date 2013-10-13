@@ -1,5 +1,6 @@
 /* Tomasz Zakrzewski i Maciej Dmowski /
 /  JNP 2013/2014, Projekt 1 */
+//TODO: przeczyścić i pokomentować kod
 #include <cstdio>
 #include <climits>
 #include <string>
@@ -47,8 +48,11 @@ inline const Delay queryM(Hour b, Hour e) {
 	while (b / 2 != e / 2) {
 		if (b % 2 == 0)
 			res = max(res, tree[b + 1]);	//lewy kraniec, bierzemy prawego brata
-			if (e % 2 == 1)
-				res = max(res, tree[e - 1]);	//prawy kraniec, bierzemy lewego brata
+		if (e % 2 == 1)
+			res = max(res, tree[e - 1]);	//prawy kraniec, bierzemy lewego brata
+			
+		b /= 2;
+		e /= 2;
 	}
 	
 	return res;
@@ -134,6 +138,7 @@ inline vector<string> split(const string& s, const char delim) {
 		} else tmp.push_back(s[i]);
 	}
 	
+	res.push_back(tmp);
 	return res;
 }
 
@@ -157,12 +162,22 @@ inline const bool validateDate(const string& date) {
 		tmp[i] = atoi(s[i].c_str());
 	}
 	
-	tm timeinfo;
+	time_t rawtime;
+	time (&rawtime);
+	
+	tm timeinfo = *(localtime(&rawtime));
 	timeinfo.tm_mday = tmp[0];
 	timeinfo.tm_mon = tmp[1] - 1;
 	timeinfo.tm_year = tmp[2] - 1900;
 	
-	return mktime(&timeinfo) != -1;
+	rawtime = mktime(&timeinfo);
+	
+	if (rawtime == -1)
+		return false;
+	timeinfo = *(localtime(&rawtime));
+	if (timeinfo.tm_mday != tmp[0] || timeinfo.tm_mon != tmp[1] - 1 || timeinfo.tm_year != tmp[2] - 1900)
+		return false;
+	return true;
 }
 
 //zwraca <-1, -1>, jeśli godzina niepoprawna,w innym przypadku zwraca <h, m>
@@ -204,13 +219,16 @@ inline string getNextInputString(string& soFar, int& lineId, const int lengthLim
 		size = fread(buffer, 1, BUFFER_SIZE, stdin);
 	}
 	
+	if (size == 0)
+		return "eof";
+	
 	//przechodzimy przez białe znaki
 	while (isspace(buffer[id]) && buffer[id] != '\n') {
 		soFar.push_back(buffer[id]);
 		++id;
 		if (id >= size) {
 			if ((size = fread(buffer, 1, BUFFER_SIZE, stdin)) == 0)
-				return "";
+				return "eof";
 			id = 0;
 		}
 	}
@@ -218,22 +236,22 @@ inline string getNextInputString(string& soFar, int& lineId, const int lengthLim
 	//kolejny znak, to albo początek stringa, albo znak nowej linii
 	if (buffer[id] == '\n') {
 		if (newline) {
+			soFar.clear();
+			lineId++;
 			++id;
 			if (id >= size) {
 				if ((size = fread(buffer, 1, BUFFER_SIZE, stdin)) == 0)
-					return "";
+					return "eof";
 				id = 0;
 			}
 		}
-		
-		soFar.clear();
-		lineId++;
 		return "";	//niezależnie, czy omijamy nl czy nie, wynik to pusty ciąg
 	}
 	
 	//kolejny znak musi być początkiem stringa
 	string res = "";
 	while (!isspace(buffer[id]) && res.length() <= lengthLimit) {
+		soFar.push_back(buffer[id]);
 		res.push_back(buffer[id]);
 		++id;
 		if (id >= size) {
@@ -244,18 +262,21 @@ inline string getNextInputString(string& soFar, int& lineId, const int lengthLim
 	}
 	
 	if (res.length() > lengthLimit || newline) {	//więcej znaków niż limit, lub znaki, tam gdzie nie powinno ich być
-		soFar += res;
-		printError(res, lineId);
+		//soFar += res;
+		printError(soFar, lineId);
 		while (buffer[id] != '\n') {
 			soFar.push_back(buffer[id]);	//FIXME niekoniecznie potrzebne tu, ale konsekwentnie
 			fputc(buffer[id], stderr);
 			++id;
 			if (id >= size) {
-				if ((size = fread(buffer, 1, BUFFER_SIZE, stdin)) == 0)
+				if ((size = fread(buffer, 1, BUFFER_SIZE, stdin)) == 0) {
+					fputc('\n', stderr);
 					return "e";
+				}
 				id = 0;
 			}
 		}
+		fputc('\n', stderr);
 		return "e";
 	} else
 		return res;
@@ -265,7 +286,7 @@ inline void processQueries(const string& lastCommand, string& soFar, int& lineId
 	string command = lastCommand;
 	string data[2];
 	
-	while (!command.empty()) {
+	while (command != "eof") {
 		int i = 0;
 		for (; i < 2; ++i)
 			if ((data[i] = getNextInputString(soFar, lineId, TIME_LIMIT)) == "e")
@@ -313,7 +334,7 @@ inline void processTrains() {
 	int lineId = -1;
 	
 	trainId = getNextInputString(soFar, lineId, TRAIN_ID_LIMIT);
-	while (!trainId.empty() && trainId != "L" && trainId != "M" && trainId != "S") {	//dopóki coś jest na wejściu i nie jest poleceniem
+	while (trainId != "eof" && trainId != "L" && trainId != "M" && trainId != "S") {	//dopóki coś jest na wejściu i nie jest poleceniem
 		if (trainId != "e") {
 			int i = 0;
 			for (; i < 3; ++i) //wczytywanie
@@ -324,6 +345,9 @@ inline void processTrains() {
 				//pora na walidację					//się zgadza i żadne nie jest dłuższe niż może być
 				pair<Hour, Hour> h = parseHour(data[1]);
 				int d;
+				
+				//FIXME usuń debug z końcowej wersji
+				//printf("Dotarłem do: %s, %s, %d:%d, %s\n", trainId.c_str(), data[0].c_str(), h.first, h.second, data[2].c_str());
 				if (h.first == -1 || !isUnsignedNumber(trainId) || !validateDate(data[0]) || !isUnsignedNumber(data[2]) || 
 					(d = atoi(data[2].c_str())) > MAX_DELAY) {	//dane się nie walidują
 					printError(soFar, lineId);
@@ -335,17 +359,20 @@ inline void processTrains() {
 		
 		getNextInputString(soFar, lineId, 0, true);	//skocz do nowej linii
 		trainId = getNextInputString(soFar, lineId, TRAIN_ID_LIMIT);
+		//FIXME: usuń to
+		//printf("trainId: %s\n", trainId.c_str());
 	}
 	
 	//jak pojawia się pierwszy nie-pociąg(query)
-	updateData();
-	processQueries(trainId, soFar, lineId);
+	if (!trainId.empty()) {
+		updateData();
+		processQueries(trainId, soFar, lineId);
+	}
 }
 
 //koniec walidacji
 
 int main() {
 	processTrains();	//lubię takie "jednolinijkowe" programy ;D
-
 	return 0;
 }
