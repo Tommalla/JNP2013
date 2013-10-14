@@ -1,7 +1,6 @@
 /* Tomasz Zakrzewski i Maciej Dmowski /
 /  JNP 2013/2014, Projekt 1 */
 //TODO: przeczyścić i pokomentować kod
-//FIXME: przemyśleć zapytania S i L (przekroczenie zakresu)
 #include <cstdio>
 #include <climits>
 #include <string>
@@ -14,7 +13,7 @@ using namespace std;
 
 typedef unsigned short int Delay;	//typedef, bo można łatwo zmodyfikować
 typedef short int Hour;
-typedef unsigned short int TrainNo;
+typedef unsigned long long int TrainNo;
 typedef unsigned long long int Result;
 
 const char* RESULT_FORMAT = "%llu\n";
@@ -27,7 +26,7 @@ const int TRAIN_ID_LIMIT = 9;
 const int DATE_LIMIT = 10;
 const int TIME_LIMIT = 5;
 const int DELAY_LIMIT = 6;	//nawet trochę na wyrost
-const int BUFFER_SIZE = 8;	//FIXME przemyśl rozmiar bufora
+const int BUFFER_SIZE = 100000;	//http://stackoverflow.com/a/12759003
 
 //drzewo przedziałowe typu max
 vector<Delay> tree;	//drzewo przedziałowe typu max
@@ -94,13 +93,11 @@ inline const void updateData(){
   // Kiedy skonczymy wczytywać dane o pociagach wywolujemy tę funkcje. 
   // Ona reorganizuje nam struktury.
   // Liczy sie tablica prefiksowa l;
-  // Liczy sie drzewko podzialowe tree;
   // Liczy sie tablica prefiksowa s;
 
   updateL();
   updateS();
 }
-
 
 inline const TrainNo queryL(Hour b, Hour e) {
 	//operacja obliczania liczby pociagów które przejechaly przez posterunek na przedziale [b; e] (ogolna idea: l[e]-l[b-1]);
@@ -164,15 +161,13 @@ inline const bool validateDate(const string& date) {
 		tmp[i] = atoi(s[i].c_str());
 	}
 	
-	time_t rawtime;
-	time (&rawtime);
-	
-	tm timeinfo = *(localtime(&rawtime));
+	tm timeinfo;
+	timeinfo.tm_sec = timeinfo.tm_min = timeinfo.tm_hour = 12;
 	timeinfo.tm_mday = tmp[0];
 	timeinfo.tm_mon = tmp[1] - 1;
 	timeinfo.tm_year = tmp[2] - 1900;
 	
-	rawtime = mktime(&timeinfo);
+	time_t rawtime = mktime(&timeinfo);
 	
 	if (rawtime == -1)
 		return false;
@@ -207,6 +202,17 @@ inline const Hour convertToMinutes(const Hour& h, const Hour& m) {
 	return (h * 60 + m) % DAYSIZE;
 }
 
+//czyta bufor od nowa jeśli trzeba
+inline bool checkBuffer(char* buffer, unsigned short int& size, unsigned short int &id) {
+	if (id >= size) {
+		if ((size = fread(buffer, 1, BUFFER_SIZE, stdin)) == 0)
+			return false;
+		id = 0;
+	}
+	
+	return true;
+}
+
 //newline - czy oczekujemy nowej linii?
 //jeśli tak, to funkcja tylko do niej przeskoczy
 //przy braku danych zwróci pustego stringa
@@ -227,12 +233,8 @@ inline string getNextInputString(string& soFar, int& lineId, const int lengthLim
 	//przechodzimy przez białe znaki
 	while (isspace(buffer[id]) && buffer[id] != '\n') {
 		soFar.push_back(buffer[id]);
-		++id;
-		if (id >= size) {
-			if ((size = fread(buffer, 1, BUFFER_SIZE, stdin)) == 0)
-				return "eof";
-			id = 0;
-		}
+		if (!checkBuffer(buffer, size, ++id))
+			return "eof";
 	}
 	
 	//kolejny znak, to albo początek stringa, albo znak nowej linii
@@ -240,43 +242,26 @@ inline string getNextInputString(string& soFar, int& lineId, const int lengthLim
 		if (newline) {
 			soFar.clear();
 			lineId++;
-			++id;
-			if (id >= size) {
-				if ((size = fread(buffer, 1, BUFFER_SIZE, stdin)) == 0)
-					return "eof";
-				id = 0;
-			}
+			if (!checkBuffer(buffer, size, ++id))
+				return "eof";
 		}
 		return "";	//niezależnie, czy omijamy nl czy nie, wynik to pusty ciąg
 	}
 	
 	//kolejny znak musi być początkiem stringa
-	string res = "";
+	string res;
 	while (!isspace(buffer[id]) && res.length() <= lengthLimit) {
 		soFar.push_back(buffer[id]);
 		res.push_back(buffer[id]);
-		++id;
-		if (id >= size) {
-			if ((size = fread(buffer, 1, BUFFER_SIZE, stdin)) == 0)
-				return res;
-			id = 0;
-		}
+		if (!checkBuffer(buffer, size, ++id))
+			return res;
 	}
 	
 	if (res.length() > lengthLimit || newline) {	//więcej znaków niż limit, lub znaki, tam gdzie nie powinno ich być
-		//soFar += res;
 		printError(soFar, lineId);
-		while (buffer[id] != '\n') {
+		for (;checkBuffer(buffer, size, id) && buffer[id] != '\n'; ++id) {
 			soFar.push_back(buffer[id]);	//FIXME niekoniecznie potrzebne tu, ale konsekwentnie
 			fputc(buffer[id], stderr);
-			++id;
-			if (id >= size) {
-				if ((size = fread(buffer, 1, BUFFER_SIZE, stdin)) == 0) {
-					fputc('\n', stderr);
-					return "e";
-				}
-				id = 0;
-			}
 		}
 		fputc('\n', stderr);
 		return "e";
@@ -299,7 +284,8 @@ inline void processQueries(const string& lastCommand, string& soFar, int& lineId
 				//walidacja i obsługa zapytań
 				pair<Hour, Hour> begin = parseHour(data[0]), end = parseHour(data[1]);
 
-				if (begin.first == -1 || begin.second == -1 || begin.first > end.first || (begin.first == end.first && begin.second > end.second) ||
+				if (begin.first == -1 || begin.second == -1 || begin.first > end.first || 
+					(begin.first == end.first && begin.second > end.second) ||
 					!(command == "L" || command == "M" || command == "S")) {	//dane się nie walidują
 					printError(soFar, lineId);
 					fprintf(stderr, "\n");
@@ -349,8 +335,6 @@ inline void processTrains() {
 				pair<Hour, Hour> h = parseHour(data[1]);
 				int d;
 				
-				//FIXME usuń debug z końcowej wersji
-				//printf("Dotarłem do: %s, %s, %d:%d, %s\n", trainId.c_str(), data[0].c_str(), h.first, h.second, data[2].c_str());
 				if (h.first == -1 || !isUnsignedNumber(trainId) || !validateDate(data[0]) || !isUnsignedNumber(data[2]) || 
 					(d = atoi(data[2].c_str())) > MAX_DELAY) {	//dane się nie walidują
 					printError(soFar, lineId);
@@ -362,8 +346,6 @@ inline void processTrains() {
 		
 		getNextInputString(soFar, lineId, 0, true);	//skocz do nowej linii
 		trainId = getNextInputString(soFar, lineId, TRAIN_ID_LIMIT);
-		//FIXME: usuń to
-		//printf("trainId: %s\n", trainId.c_str());
 	}
 	
 	//jak pojawia się pierwszy nie-pociąg(query)
