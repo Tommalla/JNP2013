@@ -287,40 +287,41 @@ inline void processQueries(const string& lastCommand, string& soFar, int& lineId
 	string data[2];
 	
 	while (command != "eof") {
-		int i = 0;
-		for (; i < 2; ++i)
-			if ((data[i] = getNextInputString(soFar, lineId, TIME_LIMIT)) == "e")
-				break;
+		if (command != "e") {
+			int i = 0;
+			for (; i < 2; ++i)
+				if ((data[i] = getNextInputString(soFar, lineId, TIME_LIMIT)) == "e")
+					break;
 			
-		if (i == 2 && getNextInputString(soFar, lineId, 0).empty()) {	//na etapie samego czytania wszystko się powiodło
-			//walidacja i obsługa zapytań
-			pair<Hour, Hour> begin = parseHour(data[0]), end = parseHour(data[1]);
+			if (i == 2 && getNextInputString(soFar, lineId, 0).empty()) {	//na etapie samego czytania wszystko się powiodło
+				//walidacja i obsługa zapytań
+				pair<Hour, Hour> begin = parseHour(data[0]), end = parseHour(data[1]);
 
-			if (begin.first == -1 || begin.second == -1 || 
-				!(command == "L" || command == "M" || command == "S")) {	//dane się nie walidują
-				printError(soFar, lineId);
-				fprintf(stderr, "\n");
-			} else {
-				Result res;
-				Hour b = convertToMinutes(begin.first, begin.second), 
-					e = convertToMinutes(end.first, end.second);
-					
-				switch (command[0]) {
-					case 'L':
-						res = queryL(b, e);
-						break;
-					case 'M':
-						res = queryM(b, e);
-						break;
-					case 'S':
-						res = queryS(b, e);
-						break;
+				if (begin.first == -1 || begin.second == -1 || begin.first > end.first || (begin.first == end.first && begin.second > end.second) ||
+					!(command == "L" || command == "M" || command == "S")) {	//dane się nie walidują
+					printError(soFar, lineId);
+					fprintf(stderr, "\n");
+				} else {
+					Result res;
+					Hour b = convertToMinutes(begin.first, begin.second), 
+						e = convertToMinutes(end.first, end.second);
+						
+					switch (command[0]) {
+						case 'L':
+							res = queryL(b, e);
+							break;
+						case 'M':
+							res = queryM(b, e);
+							break;
+						case 'S':
+							res = queryS(b, e);
+							break;
+					}
+						
+					printf(RESULT_FORMAT, res);
 				}
-					
-				printf(RESULT_FORMAT, res);
 			}
 		}
-		
 		getNextInputString(soFar, lineId, 0, true);	//omiń znak nowej linii
 		command = getNextInputString(soFar, lineId, 1);
 	}
