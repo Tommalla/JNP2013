@@ -215,7 +215,7 @@ inline string getNextInputString(string& soFar, int& lineId, const int lengthLim
 	static unsigned short int id, size;
 	
 	if (lineId == -1) {	//inicjalizacja
-		lineId = 0;
+		lineId = 1;
 		size = fread(buffer, 1, BUFFER_SIZE, stdin);
 	}
 	
