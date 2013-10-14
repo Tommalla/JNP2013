@@ -32,7 +32,7 @@ const int BUFFER_SIZE = 100000;	//http://stackoverflow.com/a/12759003
 
 //drzewo przedziałowe typu max
 
-inline void insert(vector<Delay> &tree,Hour h, const Delay &d) {	//dodawanie opóźnienia do drzewa przedz.
+inline void insert(vector<Delay> &tree, Hour h, const Delay &d) {	//dodawanie opóźnienia do drzewa przedz.
 	h += BASE;
 	
 	for (; h > 0 && tree.at(h) < d; h /= 2)
@@ -40,7 +40,7 @@ inline void insert(vector<Delay> &tree,Hour h, const Delay &d) {	//dodawanie op�
 }
 
 //operacja obliczania max opóźnienia na przedziale [b; e] (drzewo przedziałowe)
-inline const Delay queryM(vector<Delay> &tree,Hour b, Hour e) {
+inline const Delay queryM(vector<Delay> &tree, Hour b, Hour e) {
 	b += BASE;
 	e += BASE;
 	
@@ -65,11 +65,11 @@ inline const Delay queryM(vector<Delay> &tree,Hour b, Hour e) {
 
 
 //liczenie sum w tablicach
-inline const void addTrainL(vector<TrainNo> &l,const Hour &h,const Delay &d){
+inline const void addTrainL(vector<TrainNo> &l, const Hour &h,const Delay &d){
 	l.at(h)++; 
 }
 
-inline const void addTrainS(vector<Result> &s,const Hour &h, const Delay &d){
+inline const void addTrainS(vector<Result> &s, const Hour &h, const Delay &d){
 	s.at(h) += d;
 }
 
@@ -95,12 +95,12 @@ inline const void updateData(vector<TrainNo> &l, vector<Result> &s){
 }
 
 //operacja obliczania liczby pociagów które przejechaly przez posterunek na przedziale [b; e] (ogolna idea: l[e]-l[b-1]);
-inline const TrainNo queryL(vector<TrainNo> &l,Hour b, Hour e) {
+inline const TrainNo queryL(vector<TrainNo> &l, Hour b, Hour e) {
         return l[e] - (b > 0 ? l[b - 1] : 0);
 }
 
 //operacja obliczania sumy opóźnień na przedziale [b; e] (Ogólna idea: s[e]-s[b-1]);
-inline const Result queryS(vector<Result> &s,Hour b, Hour e) {
+inline const Result queryS(vector<Result> &s, Hour b, Hour e) {
         return s[e] - (b > 0 ? s[b - 1] : 0);
 }
 
@@ -108,9 +108,9 @@ inline const Result queryS(vector<Result> &s,Hour b, Hour e) {
 
 //dodawanie pociągu do struktur
 inline void addTrain(vector<TrainNo> &l, vector<Delay> &tree, vector<Result> &s, const Hour &h, const Delay &d) {
-        addTrainL(l,h, d);
-	insert(tree,h, d);
-        addTrainS(s,h, d);
+        addTrainL(l, h, d);
+	insert(tree, h, d);
+        addTrainS(s, h, d);
 }
 
 //walidacja i parsowanie
@@ -265,7 +265,7 @@ inline string getNextInputString(string& soFar, int& lineId, const int lengthLim
 		return res;
 }
 
-inline void processQueries(vector<TrainNo> &l, vector<Delay> &tree, vector<Result> &s,const string& lastCommand, string& soFar, int& lineId) {
+inline void processQueries(vector<TrainNo> &l, vector<Delay> &tree, vector<Result> &s, const string& lastCommand, string& soFar, int& lineId) {
 	string command = lastCommand;
 	string data[2];
 	
@@ -292,13 +292,13 @@ inline void processQueries(vector<TrainNo> &l, vector<Delay> &tree, vector<Resul
 						
 					switch (command[0]) {
 						case 'L':
-							res = queryL(l,b, e);
+							res = queryL(l, b, e);
 							break;
 						case 'M':
-							res = queryM(tree,b, e);
+							res = queryM(tree, b, e);
 							break;
 						case 'S':
-							res = queryS(s,b, e);
+							res = queryS(s, b, e);
 							break;
 					}
 						
@@ -346,8 +346,8 @@ inline void processTrains(vector<TrainNo> &l, vector<Delay> &tree, vector<Result
 	
 	//jak pojawia się pierwszy nie-pociąg(query)
 	if (!trainId.empty()) {
-		updateData(l,s);
-		processQueries(l,tree,s,trainId, soFar, lineId);
+		updateData(l, s);
+		processQueries(l, tree, s, trainId, soFar, lineId);
 	}
 }
 
