@@ -11,7 +11,8 @@
 
 using namespace std;
 
-typedef unsigned short int Delay;	//typedef, bo można łatwo zmodyfikować
+//typedef, bo można łatwo zmodyfikować
+typedef unsigned short int Delay;
 typedef short int Hour;
 typedef unsigned long long int TrainNo;
 typedef unsigned long long int Result;
@@ -21,6 +22,7 @@ const Delay MAX_DELAY = USHRT_MAX;	//do walidacji opóźnienia
 
 const int BASE = 2048;
 const int DAYSIZE = 1440;
+
 //limity na długości stringów
 const int TRAIN_ID_LIMIT = 9;
 const int DATE_LIMIT = 10;
@@ -65,6 +67,7 @@ inline const Delay queryM(Hour b, Hour e) {
 vector<TrainNo> l;
 vector<Result> s;
 
+//liczenie sum w tablicach
 inline const void addTrainL(const Hour &h,const Delay &d){
 	l.at(h)++; 
 }
@@ -73,20 +76,15 @@ inline const void addTrainS(const Hour &h, const Delay &d){
 	s.at(h) += d;
 }
 
-inline const void updateL(){
-	TrainNo suma = 0;
-	for(int i = 0; i < DAYSIZE; i++) {
-		suma += l.at(i);
-		l.at(i) = suma;
-	}
+//przeliczanie tablic
+inline const void updateL() {
+	for(int i = 1; i < DAYSIZE; i++)
+		l.at(i) += l.at(i - 1);
 }
 
-inline const void updateS(){
-	Result suma = 0;
-	for (int i = 0; i < DAYSIZE; i++) {
-		suma += s.at(i);
-		s[i] = suma;
-	}
+inline const void updateS() {
+	for (int i = 1; i < DAYSIZE; i++)
+		s.at(i) += s.at(i - 1);
 } 
 
 inline const void updateData(){
@@ -99,28 +97,27 @@ inline const void updateData(){
   updateS();
 }
 
+//operacja obliczania liczby pociagów które przejechaly przez posterunek na przedziale [b; e] (ogolna idea: l[e]-l[b-1]);
 inline const TrainNo queryL(Hour b, Hour e) {
-	//operacja obliczania liczby pociagów które przejechaly przez posterunek na przedziale [b; e] (ogolna idea: l[e]-l[b-1]);
-        return l[e] - (b>0 ? l[b-1] : 0);
+        return l[e] - (b > 0 ? l[b - 1] : 0);
 }
 
+//operacja obliczania sumy opóźnień na przedziale [b; e] (Ogólna idea: s[e]-s[b-1]);
 inline const Result queryS(Hour b, Hour e) {
-	//operacja obliczania sumy opóźnień na przedziale [b; e] (Ogólna idea: s[e]-s[b-1]);
-        return s[e] - (b>0 ? s[b-1] : 0);
+        return s[e] - (b > 0 ? s[b - 1] : 0);
 }
 
 //koniec sum prefiksowych
 
-
+//dodawanie pociągu do struktur
 inline void addTrain(const Hour &h, const Delay &d) {
-	//dodawanie pociągu do struktur
-        
-        addTrainL(h,d);
+        addTrainL(h, d);
 	insert(h, d);
-        addTrainS(h,d);
+        addTrainS(h, d);
 }
 
 //walidacja i parsowanie
+
 inline void printError(const string& line, const int& lineNo) {
 	fprintf(stderr, "Error %d: %s", lineNo, line.c_str());
 }
@@ -197,8 +194,8 @@ inline const pair<Hour, Hour> parseHour(const string& hour) {
 	return make_pair(tmp[0], tmp[1]);
 }
 
+//konwersja z h:m do ilości minut od północy
 inline const Hour convertToMinutes(const Hour& h, const Hour& m) {
-	//konwersja z h:m do ilości minut od północy
 	return (h * 60 + m) % DAYSIZE;
 }
 
@@ -213,10 +210,12 @@ inline bool checkBuffer(char* buffer, unsigned short int& size, unsigned short i
 	return true;
 }
 
-//newline - czy oczekujemy nowej linii?
-//jeśli tak, to funkcja tylko do niej przeskoczy
+//funkcja do wczytywania kolejnego stringa z wejścia
+//omija białe znaki poza \n, 
+//newline - czy oczekujemy nowej linii? -> jeśli tak, to funkcja tylko do niej przeskoczy
 //przy braku danych zwróci pustego stringa
-//przy nadmiarze danych zwróci "e"
+//przy nadmiarze danych zwróci "e" i wypisze błąd na stderr
+//przy końcu pliku zwróci "eof"
 inline string getNextInputString(string& soFar, int& lineId, const int lengthLimit, const bool& newline = false) {
 	//składanie kolejnego inputowego stringa z wejściowego bufora
 	static char buffer[BUFFER_SIZE];
@@ -237,7 +236,7 @@ inline string getNextInputString(string& soFar, int& lineId, const int lengthLim
 			return "eof";
 	}
 	
-	//kolejny znak, to albo początek stringa, albo znak nowej linii
+	//kolejny znak to albo początek stringa, albo znak nowej linii
 	if (buffer[id] == '\n') {
 		if (newline) {
 			soFar.clear();
@@ -260,7 +259,7 @@ inline string getNextInputString(string& soFar, int& lineId, const int lengthLim
 	if (res.length() > lengthLimit || newline) {	//więcej znaków niż limit, lub znaki, tam gdzie nie powinno ich być
 		printError(soFar, lineId);
 		for (;checkBuffer(buffer, size, id) && buffer[id] != '\n'; ++id) {
-			soFar.push_back(buffer[id]);	//FIXME niekoniecznie potrzebne tu, ale konsekwentnie
+			soFar.push_back(buffer[id]);	//niekoniecznie potrzebne tu, ale konsekwentnie
 			fputc(buffer[id], stderr);
 		}
 		fputc('\n', stderr);
@@ -361,6 +360,6 @@ int main() {
 	tree.resize(2 * BASE);
 	l.resize(DAYSIZE);
 	s.resize(DAYSIZE);
-	processTrains();	//lubię takie "jednolinijkowe" programy ;D
+	processTrains();
 	return 0;
 }
