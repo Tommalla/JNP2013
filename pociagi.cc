@@ -1,6 +1,7 @@
 /* Tomasz Zakrzewski i Maciej Dmowski /
 /  JNP 2013/2014, Projekt 1 */
 //TODO: przeczyścić i pokomentować kod
+//FIXME: przemyśleć zapytania S i L (przekroczenie zakresu)
 #include <cstdio>
 #include <climits>
 #include <string>
@@ -29,13 +30,13 @@ const int DELAY_LIMIT = 6;	//nawet trochę na wyrost
 const int BUFFER_SIZE = 8;	//FIXME przemyśl rozmiar bufora
 
 //drzewo przedziałowe typu max
-Delay tree[2 * BASE + 10];	//drzewo przedziałowe typu max
+vector<Delay> tree;	//drzewo przedziałowe typu max
 
 inline void insert(Hour h, const Delay &d) {	//dodawanie opóźnienia do drzewa przedz.
 	h += BASE;
 	
-	for (; h > 0 && tree[h] < d; h /= 2)
-		tree[h] = d;
+	for (; h > 0 && tree.at(h) < d; h /= 2)
+		tree.at(h) = d;
 }
 
 //operacja obliczania max opóźnienia na przedziale [b; e] (drzewo przedziałowe)
@@ -43,13 +44,13 @@ inline const Delay queryM(Hour b, Hour e) {
 	b += BASE;
 	e += BASE;
 	
-	Delay res = max(tree[b], tree[e]);
+	Delay res = max(tree.at(b), tree.at(e));
 	
 	while (b / 2 != e / 2) {
 		if (b % 2 == 0)
-			res = max(res, tree[b + 1]);	//lewy kraniec, bierzemy prawego brata
+			res = max(res, tree.at(b + 1));	//lewy kraniec, bierzemy prawego brata
 		if (e % 2 == 1)
-			res = max(res, tree[e - 1]);	//prawy kraniec, bierzemy lewego brata
+			res = max(res, tree.at(e - 1));	//prawy kraniec, bierzemy lewego brata
 			
 		b /= 2;
 		e /= 2;
@@ -62,31 +63,31 @@ inline const Delay queryM(Hour b, Hour e) {
 
 //sumy prefiksowe (l, s)
 
-TrainNo l[DAYSIZE];
-Delay s[DAYSIZE];
+vector<TrainNo> l;
+vector<Result> s;
 
 inline const void addTrainL(const Hour &h,const Delay &d){
-  l[h]++; 
+	l.at(h)++; 
 }
 
 inline const void addTrainS(const Hour &h, const Delay &d){
-  s[h]+=d;
+	s.at(h) += d;
 }
 
 inline const void updateL(){
-  int suma =0;
-  for(int i=0;i<DAYSIZE;i++){
-    suma+=l[i];
-    l[i]=suma;
-  }
+	TrainNo suma = 0;
+	for(int i = 0; i < DAYSIZE; i++) {
+		suma += l.at(i);
+		l.at(i) = suma;
+	}
 }
 
 inline const void updateS(){
-  int suma = 0;
-  for (int i=0;i<DAYSIZE;i++){
-    suma+=s[i];
-    s[i]=suma;
-  }
+	Result suma = 0;
+	for (int i = 0; i < DAYSIZE; i++) {
+		suma += s.at(i);
+		s[i] = suma;
+	}
 } 
 
 inline const void updateData(){
@@ -106,7 +107,7 @@ inline const TrainNo queryL(Hour b, Hour e) {
         return l[e] - (b>0 ? l[b-1] : 0);
 }
 
-inline const Delay queryS(Hour b, Hour e) {
+inline const Result queryS(Hour b, Hour e) {
 	//operacja obliczania sumy opóźnień na przedziale [b; e] (Ogólna idea: s[e]-s[b-1]);
         return s[e] - (b>0 ? s[b-1] : 0);
 }
@@ -135,7 +136,8 @@ inline vector<string> split(const string& s, const char delim) {
 		if (s[i] == delim) {
 			res.push_back(tmp);
 			tmp.clear();
-		} else tmp.push_back(s[i]);
+		} else 
+			tmp.push_back(s[i]);
 	}
 	
 	res.push_back(tmp);
@@ -374,6 +376,9 @@ inline void processTrains() {
 //koniec walidacji
 
 int main() {
+	tree.resize(2 * BASE);
+	l.resize(DAYSIZE);
+	s.resize(DAYSIZE);
 	processTrains();	//lubię takie "jednolinijkowe" programy ;D
 	return 0;
 }
