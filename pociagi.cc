@@ -195,7 +195,7 @@ inline const pair<Hour, Hour> parseHour(const string& hour) {
 	if (s.size() != 2)
 		return make_pair(-1, -1);
 	
-        //FIXME Tutaj byla zmiana, z int tmp[2]={1, 2}
+        //TODO Tutaj byla zmiana typu, bylo: int tmp[2]={1, 2}
 	unsigned int tmp[2] = {1, 2};
 	
         
@@ -209,8 +209,8 @@ inline const pair<Hour, Hour> parseHour(const string& hour) {
 	if (tmp[0] > 23 || tmp[1] > 59)
                 return make_pair(-1, -1);
 		
-                //TODO wyczyscic o ile bedzie dzialac
-                //tmp[0] = tmp[1] = -1;
+                //TODO Wyczyscic o ile bedzie dzialac
+                //Bylo: tmp[0] = tmp[1] = -1;
 	
 	return make_pair(tmp[0], tmp[1]);
 }
@@ -257,8 +257,10 @@ inline bool saveInput(char* buffer, string& soFar, const int lineId, unsigned in
 //przy nadmiarze danych zwróci "e" i wypisze błąd na stderr
 //przy końcu pliku zwróci "eof"
 
-//FIXME zmiana typu lengthLimit z const int na const usigned int
-//
+
+//TODO zmiana typu lengthLimit z const int na const usigned int
+//O ile wszystko dziala - wyczyscic.
+
 inline string getNextInputString(string& soFar, int& lineId, const unsigned int lengthLimit, const bool& newline = false) {
 	//składanie kolejnego inputowego stringa z wejściowego bufora
 	static char buffer[BUFFER_SIZE];
