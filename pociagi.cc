@@ -28,7 +28,7 @@ const int TRAIN_ID_LIMIT = 9;
 const int DATE_LIMIT = 10;
 const int TIME_LIMIT = 5;
 const int DELAY_LIMIT = 6;	//nawet trochę na wyrost
-const int BUFFER_SIZE = 100000;	//http://stackoverflow.com/a/12759003
+const int BUFFER_SIZE = 100000;	//FIXME
 
 //drzewo przedziałowe typu max
 
@@ -197,7 +197,7 @@ inline const Hour convertToMinutes(const Hour& h, const Hour& m) {
 }
 
 //czyta bufor od nowa jeśli trzeba
-inline bool checkBuffer(char* buffer, unsigned short int& size, unsigned short int &id) {
+inline bool checkBuffer(char* buffer, unsigned int& size, unsigned int &id) {
 	if (id >= size) {
 		if ((size = fread(buffer, 1, BUFFER_SIZE, stdin)) == 0)
 			return false;
@@ -207,7 +207,7 @@ inline bool checkBuffer(char* buffer, unsigned short int& size, unsigned short i
 	return true;
 }
 
-inline void printTooLongLine(char* buffer, string& soFar, const int lineId, unsigned short int& size, unsigned short int &id) {
+inline void printTooLongLine(char* buffer, string& soFar, const int lineId, unsigned int& size, unsigned int &id) {
 	printError(soFar, lineId);
 	for (;checkBuffer(buffer, size, id) && buffer[id] != '\n'; ++id) {
 		//FIXME: ta linia tu w niektórych przypadkach może być błędna (size + 1 > max_size)
@@ -217,7 +217,7 @@ inline void printTooLongLine(char* buffer, string& soFar, const int lineId, unsi
 	fputc('\n', stderr);	
 }
 
-inline bool saveInput(char* buffer, string& soFar, const int lineId, unsigned short int& size, unsigned short int& id) {
+inline bool saveInput(char* buffer, string& soFar, const int lineId, unsigned int& size, unsigned int& id) {
 	soFar.push_back(buffer[id]);
 	if (soFar.length() == soFar.max_size()) {
 		printTooLongLine(buffer, soFar, lineId, size, id);
@@ -235,7 +235,7 @@ inline bool saveInput(char* buffer, string& soFar, const int lineId, unsigned sh
 inline string getNextInputString(string& soFar, int& lineId, const int lengthLimit, const bool& newline = false) {
 	//składanie kolejnego inputowego stringa z wejściowego bufora
 	static char buffer[BUFFER_SIZE];
-	static unsigned short int id, size;
+	static unsigned int id, size;
 	
 	if (lineId == -1) {	//inicjalizacja
 		lineId = 1;
