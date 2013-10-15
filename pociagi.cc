@@ -207,6 +207,25 @@ inline bool checkBuffer(char* buffer, unsigned short int& size, unsigned short i
 	return true;
 }
 
+inline void printTooLongLine(char* buffer, string& soFar, const int lineId, unsigned short int& size, unsigned short int &id) {
+	printError(soFar, lineId);
+	for (;checkBuffer(buffer, size, id) && buffer[id] != '\n'; ++id) {
+		//FIXME: ta linia tu w niektórych przypadkach może być błędna (size + 1 > max_size)
+		//soFar.push_back(buffer[id]);	//niekoniecznie potrzebne tu, ale konsekwentnie
+		fputc(buffer[id], stderr);
+	}
+	fputc('\n', stderr);	
+}
+
+inline bool saveInput(char* buffer, string& soFar, const int lineId, unsigned short int& size, unsigned short int& id) {
+	soFar.push_back(buffer[id]);
+	if (soFar.length() == soFar.max_size()) {
+		printTooLongLine(buffer, soFar, lineId, size, id);
+		return false;
+	}
+	return true;
+}
+
 //funkcja do wczytywania kolejnego stringa z wejścia
 //omija białe znaki poza \n, 
 //newline - czy oczekujemy nowej linii? -> jeśli tak, to funkcja tylko do niej przeskoczy
@@ -228,7 +247,8 @@ inline string getNextInputString(string& soFar, int& lineId, const int lengthLim
 	
 	//przechodzimy przez białe znaki
 	while (isspace(buffer[id]) && buffer[id] != '\n') {
-		soFar.push_back(buffer[id]);
+		if (!saveInput(buffer, soFar, lineId, size, id))
+			return "e";
 		if (!checkBuffer(buffer, size, ++id))
 			return "eof";
 	}
@@ -247,19 +267,16 @@ inline string getNextInputString(string& soFar, int& lineId, const int lengthLim
 	//kolejny znak musi być początkiem stringa
 	string res;
 	while (!isspace(buffer[id]) && res.length() <= lengthLimit) {
-		soFar.push_back(buffer[id]);
+		if (!saveInput(buffer, soFar, lineId, size, id))
+			return "e";
+		
 		res.push_back(buffer[id]);
 		if (!checkBuffer(buffer, size, ++id))
 			return res;
 	}
 	
 	if (res.length() > lengthLimit || newline) {	//więcej znaków niż limit, lub znaki, tam gdzie nie powinno ich być
-		printError(soFar, lineId);
-		for (;checkBuffer(buffer, size, id) && buffer[id] != '\n'; ++id) {
-			soFar.push_back(buffer[id]);	//niekoniecznie potrzebne tu, ale konsekwentnie
-			fputc(buffer[id], stderr);
-		}
-		fputc('\n', stderr);
+		printTooLongLine(buffer, soFar, lineId, size, id);
 		return "e";
 	} else
 		return res;
