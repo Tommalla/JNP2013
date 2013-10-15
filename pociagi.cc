@@ -123,22 +123,40 @@ inline vector<string> split(const string& s, const char delim) {
 	vector<string> res;
 	string tmp;
 	
-	for (int i = 0; i < s.length(); ++i) {
+        for(std::string::const_iterator it=s.begin(); it!=s.end();++it){
+                if(*it == delim){
+                        res.push_back(tmp);
+                        tmp.clear();
+                }else{
+                        tmp.push_back(*it);
+                }
+        }
+        
+	
+	res.push_back(tmp);
+	return res;
+
+        //TODO Wywalić! Jeśli bedzie działać.
+	/*for (int i = 0; i < s.length(); ++i) {
 		if (s[i] == delim) {
 			res.push_back(tmp);
 			tmp.clear();
 		} else 
 			tmp.push_back(s[i]);
-	}
-	
-	res.push_back(tmp);
-	return res;
+	}*/
 }
 
 inline const bool isUnsignedNumber(const string& txt) {
-	for (int i = 0; i < txt.length(); ++i)
+        //TODO Wywalić! Jeśli bedzie działać.
+	/*for (int i = 0; i < txt.length(); ++i)
 		if (!isdigit(txt[i]))
-			return false;
+			return false;*/
+
+        for(std::string::const_iterator it=txt.begin(); it!=txt.end(); ++it){
+                if(!isdigit(*it)){
+                        return false;
+                }
+        }
 	return true;
 }
 
@@ -177,16 +195,22 @@ inline const pair<Hour, Hour> parseHour(const string& hour) {
 	if (s.size() != 2)
 		return make_pair(-1, -1);
 	
-	int tmp[2] = {1, 2};
+        //FIXME Tutaj byla zmiana, z int tmp[2]={1, 2}
+	unsigned int tmp[2] = {1, 2};
 	
-	for (int i = 0; i < 2; ++i) {
-		if (s[i].length() > 2 || s[i].length() < tmp[i] || !isUnsignedNumber(s[i]))
+        
+        for (int i = 0; i < 2; ++i) {
+		if (s[i].length() > 2 || s[i].length() < tmp[i] || !isUnsignedNumber(s[i])){
 			return make_pair(-1, -1);
+                }
 		tmp[i] = atoi(s[i].c_str());
 	}
 	
 	if (tmp[0] > 23 || tmp[1] > 59)
-		tmp[0] = tmp[1] = -1;
+                return make_pair(-1, -1);
+		
+                //TODO wyczyscic o ile bedzie dzialac
+                //tmp[0] = tmp[1] = -1;
 	
 	return make_pair(tmp[0], tmp[1]);
 }
@@ -232,7 +256,10 @@ inline bool saveInput(char* buffer, string& soFar, const int lineId, unsigned in
 //przy braku danych zwróci pustego stringa
 //przy nadmiarze danych zwróci "e" i wypisze błąd na stderr
 //przy końcu pliku zwróci "eof"
-inline string getNextInputString(string& soFar, int& lineId, const int lengthLimit, const bool& newline = false) {
+
+//FIXME zmiana typu lengthLimit z const int na const usigned int
+//
+inline string getNextInputString(string& soFar, int& lineId, const unsigned int lengthLimit, const bool& newline = false) {
 	//składanie kolejnego inputowego stringa z wejściowego bufora
 	static char buffer[BUFFER_SIZE];
 	static unsigned int id, size;
