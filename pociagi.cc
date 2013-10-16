@@ -1,6 +1,17 @@
 /* Tomasz Zakrzewski i Maciej Dmowski /
 /  JNP 2013/2014, Projekt 1 */
-//TODO: przeczyścić i pokomentować kod
+/* Słowo wstępu:
+ * Program może zdawać się zawiły i trochę mocno "jak w C",
+ * ale ma to pewien powód - odpowiedź Pana Peczarskiego na forum
+ * przedmiotu, twierdząca że nie możemy założyć, iż linia zmieści
+ * się w pamięci. Z tego powodu czytamy ją bufor po buforze i
+ * przetwarzamy znak po znaku. Jesteśmy w stanie w ten sposób
+ * przetworzyć dowolny input. Jedynym odstępstwem od wymogów treści
+ * zadania jest, że jeśli linia do tej pory była poprawna, a nam brakuje
+ * już miejsca do jej spamiętania (czyt. jest w niej jakoś strasznie dużo białych znaków, tak 
+ * że string pamiętający dotychczasową linię ma rozmiar równy string::max_size()),
+ * to poddajemy się już i wyrzucamy ją jako błędną.
+ */
 #include <cstdio>
 #include <climits>
 #include <string>
@@ -60,7 +71,6 @@ inline const Delay queryM(vector<Delay> &tree, Hour b, Hour e) {
 }
 
 //koniec drzewa przedziałowego
-
 //sumy prefiksowe (l, s)
 
 
@@ -105,6 +115,7 @@ inline const Result queryS(vector<Result> &s, Hour b, Hour e) {
 }
 
 //koniec sum prefiksowych
+//walidacja i parsowanie
 
 //dodawanie pociągu do struktur
 inline void addTrain(vector<TrainNo> &l, vector<Delay> &tree, vector<Result> &s, const Hour &h, const Delay &d) {
@@ -113,8 +124,7 @@ inline void addTrain(vector<TrainNo> &l, vector<Delay> &tree, vector<Result> &s,
         addTrainS(s, h, d);
 }
 
-//walidacja i parsowanie
-
+//metoda do wypisywania błędu z treścią będącą całą linią wczytaną do tego momentu
 inline void printError(const string& line, const int& lineNo) {
 	fprintf(stderr, "Error %d: %s", lineNo, line.c_str());
 }
@@ -147,7 +157,7 @@ inline const bool isUnsignedNumber(const string& txt) {
 }
 
 //waliduje datę
-inline const bool validateDate(const string& date) {
+inline const bool isDateValid(const string& date) {
 	vector<string> s = split(date, '.');
 	if (s.size() != 3)
 		return false;
@@ -170,7 +180,7 @@ inline const bool validateDate(const string& date) {
 	if (rawtime == -1)
 		return false;
 	timeinfo = *(localtime(&rawtime));
-	if (timeinfo.tm_mday != tmp[0] || timeinfo.tm_mon != tmp[1] - 1 || timeinfo.tm_year != tmp[2] - 1900)
+	if (timeinfo.tm_mday != tmp[0] || timeinfo.tm_mon != tmp[1] - 1 || timeinfo.tm_year != tmp[2] - 1900 || tmp[2] < 1750)
 		return false;
 	return true;
 }
@@ -212,6 +222,7 @@ inline bool checkBuffer(char* buffer, unsigned int& size, unsigned int &id) {
 	return true;
 }
 
+//wypisuje resztę (do \n) linii, którą uznaliśmy za błędną
 inline void printTooLongLine(char* buffer, string& soFar, const int lineId, unsigned int& size, unsigned int &id) {
 	printError(soFar, lineId);
 	for (;checkBuffer(buffer, size, id) && buffer[id] != '\n'; ++id) {
@@ -220,6 +231,8 @@ inline void printTooLongLine(char* buffer, string& soFar, const int lineId, unsi
 	fputc('\n', stderr);	
 }
 
+//zapisuje kolejny znak przetwarzany do tymczasowej pamięci na linię
+//jeśli przekroczymy maksymalny rozmiar tej pamięci, wypisze się błąd
 inline bool saveInput(char* buffer, string& soFar, const int lineId, unsigned int& size, unsigned int& id) {
 	soFar.push_back(buffer[id]);
 	if (soFar.length() == soFar.max_size()) {
@@ -229,12 +242,12 @@ inline bool saveInput(char* buffer, string& soFar, const int lineId, unsigned in
 	return true;
 }
 
-//funkcja do wczytywania kolejnego stringa z wejścia
+//funkcja do wczytywania kolejnego słowa z wejścia (spójny fragment bez białych znaków)
 //omija białe znaki poza \n, 
-//newline - czy oczekujemy nowej linii? -> jeśli tak, to funkcja tylko do niej przeskoczy
-//przy braku danych zwróci pustego stringa
-//przy nadmiarze danych zwróci "e" i wypisze błąd na stderr
-//przy końcu pliku zwróci "eof"
+//lenghtLimit - jeśli wczytane słowo jest dłuższe niż lengthLimit, metoda wypisze błąd i zwróci "e"
+//newline - czy oczekujemy nowej linii? -> jeśli tak i napotkamy \n, to funkcja go przeskoczy, w innym
+//przypadku, przy napotkaniu \n funkcja nie będzie czytać dalej
+//przy braku danych zwróci pustego stringa (lub "eof" przy końcu pliku)
 inline string getNextInputString(string& soFar, int& lineId, const unsigned int lengthLimit, const bool& newline = false) {
 	//składanie kolejnego inputowego stringa z wejściowego bufora
 	static char buffer[BUFFER_SIZE];
@@ -351,7 +364,7 @@ inline void processTrains(vector<TrainNo> &l, vector<Delay> &tree, vector<Result
 				pair<Hour, Hour> h = parseHour(data[1]);
 				int d;
 				
-				if (h.first == -1 || !isUnsignedNumber(trainId) || !validateDate(data[0]) || !isUnsignedNumber(data[2]) || 
+				if (h.first == -1 || !isUnsignedNumber(trainId) || !isDateValid(data[0]) || !isUnsignedNumber(data[2]) || 
 					(d = atoi(data[2].c_str())) > MAX_DELAY || trainId.length()<3) {	//dane się nie walidują
 					printError(soFar, lineId);
 					fprintf(stderr, "\n");
@@ -374,7 +387,6 @@ inline void processTrains(vector<TrainNo> &l, vector<Delay> &tree, vector<Result
 //koniec walidacji
 
 int main() {
-        
         vector<Delay> tree;	//drzewo przedziałowe typu max
         vector<TrainNo> l;
         vector<Result> s;
