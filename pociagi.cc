@@ -352,7 +352,7 @@ inline void processTrains(vector<TrainNo> &l, vector<Delay> &tree, vector<Result
 				int d;
 				
 				if (h.first == -1 || !isUnsignedNumber(trainId) || !validateDate(data[0]) || !isUnsignedNumber(data[2]) || 
-					(d = atoi(data[2].c_str())) > MAX_DELAY) {	//dane się nie walidują
+					(d = atoi(data[2].c_str())) > MAX_DELAY || trainId.length()<3) {	//dane się nie walidują
 					printError(soFar, lineId);
 					fprintf(stderr, "\n");
 				} else	//dane się walidują
