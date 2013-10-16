@@ -28,7 +28,7 @@ const int TRAIN_ID_LIMIT = 9;
 const int DATE_LIMIT = 10;
 const int TIME_LIMIT = 5;
 const int DELAY_LIMIT = 6;	//nawet trochę na wyrost
-const int BUFFER_SIZE = 100000;	//FIXME
+const int BUFFER_SIZE = 100000;
 
 //drzewo przedziałowe typu max
 
@@ -123,36 +123,22 @@ inline vector<string> split(const string& s, const char delim) {
 	vector<string> res;
 	string tmp;
 	
-        for(std::string::const_iterator it=s.begin(); it!=s.end();++it){
-                if(*it == delim){
-                        res.push_back(tmp);
-                        tmp.clear();
-                }else{
-                        tmp.push_back(*it);
-                }
-        }
+	for (std::string::const_iterator it = s.begin(); it != s.end(); ++it) {
+		if (*it == delim) {
+			res.push_back(tmp);
+			tmp.clear();
+		} else {
+			tmp.push_back(*it);
+		}
+	}
         
 	
 	res.push_back(tmp);
 	return res;
-
-        //TODO Wywalić! Jeśli bedzie działać.
-	/*for (int i = 0; i < s.length(); ++i) {
-		if (s[i] == delim) {
-			res.push_back(tmp);
-			tmp.clear();
-		} else 
-			tmp.push_back(s[i]);
-	}*/
 }
 
 inline const bool isUnsignedNumber(const string& txt) {
-        //TODO Wywalić! Jeśli bedzie działać.
-	/*for (int i = 0; i < txt.length(); ++i)
-		if (!isdigit(txt[i]))
-			return false;*/
-
-        for(std::string::const_iterator it=txt.begin(); it!=txt.end(); ++it){
+        for (std::string::const_iterator it = txt.begin(); it != txt.end(); ++it) {
                 if(!isdigit(*it)){
                         return false;
                 }
@@ -195,10 +181,8 @@ inline const pair<Hour, Hour> parseHour(const string& hour) {
 	if (s.size() != 2)
 		return make_pair(-1, -1);
 	
-        //TODO Tutaj byla zmiana typu, bylo: int tmp[2]={1, 2}
 	unsigned int tmp[2] = {1, 2};
 	
-        
         for (int i = 0; i < 2; ++i) {
 		if (s[i].length() > 2 || s[i].length() < tmp[i] || !isUnsignedNumber(s[i])){
 			return make_pair(-1, -1);
@@ -208,9 +192,6 @@ inline const pair<Hour, Hour> parseHour(const string& hour) {
 	
 	if (tmp[0] > 23 || tmp[1] > 59)
                 return make_pair(-1, -1);
-		
-                //TODO Wyczyscic o ile bedzie dzialac
-                //Bylo: tmp[0] = tmp[1] = -1;
 	
 	return make_pair(tmp[0], tmp[1]);
 }
@@ -234,8 +215,6 @@ inline bool checkBuffer(char* buffer, unsigned int& size, unsigned int &id) {
 inline void printTooLongLine(char* buffer, string& soFar, const int lineId, unsigned int& size, unsigned int &id) {
 	printError(soFar, lineId);
 	for (;checkBuffer(buffer, size, id) && buffer[id] != '\n'; ++id) {
-		//FIXME: ta linia tu w niektórych przypadkach może być błędna (size + 1 > max_size)
-		//soFar.push_back(buffer[id]);	//niekoniecznie potrzebne tu, ale konsekwentnie
 		fputc(buffer[id], stderr);
 	}
 	fputc('\n', stderr);	
@@ -256,11 +235,6 @@ inline bool saveInput(char* buffer, string& soFar, const int lineId, unsigned in
 //przy braku danych zwróci pustego stringa
 //przy nadmiarze danych zwróci "e" i wypisze błąd na stderr
 //przy końcu pliku zwróci "eof"
-
-
-//TODO zmiana typu lengthLimit z const int na const usigned int
-//O ile wszystko dziala - wyczyscic.
-
 inline string getNextInputString(string& soFar, int& lineId, const unsigned int lengthLimit, const bool& newline = false) {
 	//składanie kolejnego inputowego stringa z wejściowego bufora
 	static char buffer[BUFFER_SIZE];
