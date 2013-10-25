@@ -1,5 +1,9 @@
 #include "network.h"
 
+namespace network {
+	//TODO statyczne struktury danych na sieć
+}
+
 unsigned long network_new(int growing) {
 }
 
