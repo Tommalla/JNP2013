@@ -3,11 +3,11 @@
 
 all: network.o growingnet.o
 
-network.o: network.cc network.h
+network.o: network.cc network.h growingnet.o
 	g++ -g -Wall -std=c++11 --pedantic network.cc -c -o network.o
 
-growingnet.o: network.o growingnet.h growingnet.cc
-	g++ -g -Wall -std=c++11 --pedantic network.o growingnet.cc -c -o growingnet.o
+growingnet.o: growingnet.h growingnet.cc
+	g++ -g -Wall -std=c++11 --pedantic growingnet.cc -c -o growingnet.o
 
 tests: network_test1
 	./network_test1
