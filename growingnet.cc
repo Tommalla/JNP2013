@@ -2,7 +2,7 @@
 #include "network.h"
 
 unsigned long get_net() {
-	network_new(growingnet);
+	network_new(1);
 	return growingnet;
 }
 
