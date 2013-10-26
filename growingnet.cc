@@ -1,3 +1,4 @@
 #include "growingnet.h"
+#include "network.h"
 
-const char* meaninglessCode = "Nie widzę sensu istnienia tego pliku, więc piszę ten tekst, żeby w ogóle się to kompilowało.";
+const unsigned long growingnet = network_new(1);

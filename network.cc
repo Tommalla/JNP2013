@@ -20,17 +20,10 @@ typedef tuple<map<Node, NodeInfo>, size_t, int> Graph;
 typedef map<unsigned long, Graph>::iterator GraphsIterator;
 
 static unsigned long netId = 0;
-static bool initialized = false;
 
 static map<unsigned long, Graph>& getGraphs() {
 	static map<unsigned long, Graph> graphs;
 
-	//przed jakąkolwiek pierwszą operacją, trzeba stworzyć GSR
-	if (initialized == false) {
-		graphs.emplace(growingnet, Graph());
-		get<GROWING>(graphs.at(growingnet)) = 1;
-		initialized = true;
-	}
 	return graphs;
 }
 //id sieci -> wierzchołki sieci -> (para 2 setów - wierzchołki do których jest

@@ -1,6 +1,10 @@
 #ifndef GROWINGNET_H
 #define GROWINGNET_H
 
-const unsigned long growingnet = 0;
+#ifdef __cplusplus
+extern "C" const unsigned long growingnet;
+#else
+extern const unsigned long growingnet;
+#endif
 
 #endif
