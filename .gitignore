@@ -1,5 +1,7 @@
 #KDevelop
 *.kdev*
+*kate-swp*
+network_test1
 
 # Compiled Object files
 *.slo
