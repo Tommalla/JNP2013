@@ -1,9 +1,3 @@
 #include "growingnet.h"
-#include "network.h"
 
-unsigned long get_net() {
-	network_new(1);
-	return growingnet;
-}
-
-static int growingnet_init = get_net();
+const char* meaninglessCode = "Nie widzę sensu istnienia tego pliku, więc piszę ten tekst, żeby w ogóle się to kompilowało.";
