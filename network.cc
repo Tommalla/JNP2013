@@ -227,7 +227,7 @@ void network_clear(unsigned long id) {
 	if (debug)
 		fprintf(stderr, "network_clear(%lu)\nnetwork_clear: network %lu %s\n",
 			id, id, (getGraphs().find(id) == getGraphs().end()) ? "doesn't exist" : "cleared");
-	getGraphs().erase(id);
+	getGraphs().at(id) = Graph();
 }
 
 //type - IN_NODES/OUT_NODES
