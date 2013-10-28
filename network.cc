@@ -2,7 +2,6 @@
 #include <set>
 #include <cstdio>
 #include "network.h"
-#include "growingnet.h"
 
 using std::map;
 using std::set;
@@ -61,6 +60,9 @@ void network_delete(unsigned long id) {
 	getGraphs().erase(id);
 }
 
+/**
+ * type = NODES lub LINKS_NO
+ */
 size_t network_get_number(unsigned long id, const unsigned short type) {
 	if (debug)
 		fprintf(stderr, "network %lu ", id);
@@ -220,7 +222,7 @@ void network_remove_link(unsigned long id, const char* slabel, const char* tlabe
 		} else if (debug)
 			fprintf(stderr, "doesn't exist\n");
 	} else if (debug)
-		fprintf(stderr, " %s\n", (get<GROWING>(iter->second) != 0) ? "is growing" : "doesn't exist");
+		fprintf(stderr, " %s\n", (get<GROWING>(iter->second) != 0) ? " is growing" : " doesn't exist");
 }
 
 void network_clear(unsigned long id) {
@@ -240,7 +242,9 @@ void network_clear(unsigned long id) {
 		fprintf(stderr, "doesn't exist\n");
 }
 
-//type - IN_NODES/OUT_NODES
+/**
+ * type = IN_NODES lub OUT_NODES
+ */
 size_t network_get_degree(unsigned long id, const char* label, const unsigned short type) {
 	size_t res = 0;
 	GraphsIterator iter = getGraphs().find(id);
@@ -257,7 +261,7 @@ size_t network_get_degree(unsigned long id, const char* label, const unsigned sh
 		} else if (debug)
 			fprintf(stderr, "doesn't exist\n");
 	} else if (debug)
-		fprintf(stderr, "doesn't exist\n");
+		fprintf(stderr, " doesn't exist\n");
 
 	return res;
 }

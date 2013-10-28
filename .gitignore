@@ -2,6 +2,7 @@
 *.kdev*
 *kate-swp*
 network_test1
+network_test2
 
 # Compiled Object files
 *.slo
