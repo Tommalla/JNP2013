@@ -46,7 +46,7 @@ unsigned long network_new(int growing) {
 
 	if (debug)
 		fprintf(stderr, "network_new(%d)\nnetwork_new: network %lu created\n", growing, netId);
-
+	
 	return netId;
 }
 
@@ -167,12 +167,12 @@ void network_remove_node(unsigned long id, const char* label) {
 
 			//dla każdego wierzchołka, do którego jest krawędź od label
 			//usuń label z jego wierzchołków wejściowych
-			for (const char* v: get<OUT_NODES>(it->second))
+			for (Node v: get<OUT_NODES>(it->second))
 				get<IN_NODES>(get<NODES>(iter->second).at(v)).erase(label);
 
 			//dla każdego wierzchołka, który ma krawędź do label
 			//usuń label z jego wychodzących
-			for (const char* v: get<IN_NODES>(it->second))
+			for (Node v: get<IN_NODES>(it->second))
 				get<OUT_NODES>(get<NODES>(iter->second).at(v)).erase(label);
 
 			//usuń krawędzi wychodzące z label
@@ -224,10 +224,21 @@ void network_remove_link(unsigned long id, const char* slabel, const char* tlabe
 }
 
 void network_clear(unsigned long id) {
+	//FIXME: bug: wyczyści sieć rosnącą
 	if (debug)
-		fprintf(stderr, "network_clear(%lu)\nnetwork_clear: network %lu %s\n",
-			id, id, (getGraphs().find(id) == getGraphs().end()) ? "doesn't exist" : "cleared");
-	getGraphs().at(id) = Graph();
+		fprintf(stderr, "network_clear(%lu)\nnetwork_clear: network %lu ", id, id);
+	
+	GraphsIterator iter = getGraphs().find(id);
+	
+	if (iter != getGraphs().end()) {
+		if (get<GROWING>(iter->second) == 0) {
+			getGraphs().at(id) = Graph();
+			if (debug)
+				fprintf(stderr, "cleared\n");
+		} else if (debug)
+			fprintf(stderr, "is growing\n");
+	} else if (debug)
+		fprintf(stderr, "doesn't exist\n");
 }
 
 //type - IN_NODES/OUT_NODES

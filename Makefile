@@ -1,28 +1,35 @@
-.DEFAULT=all
-.PHONY=all tests
-CFLAGS=
+# .DEFAULT=all
 
-ifeq (debuglevel, 1)
-	CFLAGS=-ddebuglevel
-else 
-	CFLAGS=-dndebuglevel
+CXXFLAGS= -std=c++11
+CFLAGS= -Wall --pedantic
+OEXT=.o
+
+ifeq ($(debuglevel),1)
+	CFLAGS+=-DDEBUG
+	OEXT=.dbg.o
+else
+	CFLAGS+=-O2
 endif
 
-CXX= g++ $(CFLAGS)
+CXX= g++ $(CFLAGS) $(CXXFLAGS)
 CC= gcc $(CFLAGS)
 
+all: network$(OEXT) growingnet$(OEXT)
 
-all: network.o growingnet.o
+clean:
+	rm -rf *.o network_test1
 
-network.o: network.cc network.h
-	$(CXX) -Wall -std=c++11 --pedantic network.cc -c -o network.o
+network$(OEXT): network.cc network.h
+	$(CXX) network.cc -c -o network$(OEXT)
 
-growingnet.o: network.o growingnet.h growingnet.cc
-	$(CXX) -Wall -std=c++11 --pedantic network.o growingnet.cc -c -o growingnet.o
+growingnet$(OEXT): network$(OEXT) growingnet.h growingnet.cc
+	$(CXX) growingnet.cc -c -o growingnet$(OEXT)
 
 tests: network_test1
 	./network_test1
 
-network_test1: network.o growingnet.o network_test1.c
-	$(CC) -Wall -O2 -c network_test1.c -o network_test1.o
-	$(CXX) network_test1.o growingnet.o network.o -o network_test1
+network_test1: network$(OEXT) growingnet$(OEXT) network_test1.c
+	$(CC) -c network_test1.c -o network_test1.o
+	$(CXX) network_test1.o growingnet$(OEXT) network$(OEXT) -o network_test1
+
+.PHONY: all tests
