@@ -224,7 +224,6 @@ void network_remove_link(unsigned long id, const char* slabel, const char* tlabe
 }
 
 void network_clear(unsigned long id) {
-	//FIXME: bug: wyczyści sieć rosnącą
 	if (debug)
 		fprintf(stderr, "network_clear(%lu)\nnetwork_clear: network %lu ", id, id);
 	
