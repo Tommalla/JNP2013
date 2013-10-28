@@ -35,5 +35,10 @@ network_test1: network$(OEXT) growingnet$(OEXT) network_test1.c
 network_test2: network$(OEXT) growingnet$(OEXT) network_test2.c
 	$(CC) -c network_test2.c -o network_test2.o
 	$(CXX) network_test2.o growingnet$(OEXT) network$(OEXT) -o network_test2
+	
+network_test3: network$(OEXT) growingnet$(OEXT) network_test3.c
+	$(CC) -c network_test3.c -o network_test3.o
+	$(CXX) network_test3.o growingnet$(OEXT) network$(OEXT) -o network_test3
+	./network_test3
 
 .PHONY: all tests
