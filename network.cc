@@ -1,3 +1,6 @@
+/** Tomasz Wawreniuk i Tomasz Zakrzewski
+ *  JNP 2013/2014, Zadanie 2
+ */
 #include <map>
 #include <set>
 #include <cstdio>
@@ -23,7 +26,6 @@ static unsigned long netId = 0;
 
 static map<unsigned long, Graph>& getGraphs() {
 	static map<unsigned long, Graph> graphs;
-
 	return graphs;
 }
 
@@ -45,7 +47,7 @@ unsigned long network_new(int growing) {
 
 	if (debug)
 		fprintf(stderr, "network_new(%d)\nnetwork_new: network %lu created\n", growing, netId);
-	
+
 	return netId;
 }
 
@@ -61,6 +63,7 @@ void network_delete(unsigned long id) {
 }
 
 /**
+ * Metoda zwraca liczbę wierzchołków lub krawędzi w grafie, zależnie od argumentu type
  * type = NODES lub LINKS_NO
  */
 size_t network_get_number(unsigned long id, const unsigned short type) {
@@ -130,7 +133,7 @@ void network_add_link(unsigned long id, const char* slabel, const char* tlabel) 
 		its = nodes.emplace(slabel, NodeInfo()).first;
 		itt = nodes.emplace(tlabel, NodeInfo()).first;
 		//powyższe 2 linijki: jeśli nie ma slabel lub tlabel w sieci, stworzą je,
-		//jeśli już istnieją, zwrócą do nich iteratory (<3 C++11)
+		//jeśli już istnieją, zwrócą do nich iteratory
 
 		//jeśli krawędź nie istnieje jeszcze:
 		if (get<OUT_NODES>(nodes.at(slabel)).find(tlabel) ==
@@ -228,11 +231,14 @@ void network_remove_link(unsigned long id, const char* slabel, const char* tlabe
 void network_clear(unsigned long id) {
 	if (debug)
 		fprintf(stderr, "network_clear(%lu)\nnetwork_clear: network %lu ", id, id);
-	
+
 	GraphsIterator iter = getGraphs().find(id);
-	
+
 	if (iter != getGraphs().end()) {
 		if (get<GROWING>(iter->second) == 0) {
+			//zerujemy sieć - najprościej po prostu nadpisać ją nową, pustą
+			//stare wartości się same zwolnią, bo STL ma poprawnie zaimplementowane
+			//operatory =
 			getGraphs().at(id) = Graph();
 			if (debug)
 				fprintf(stderr, "cleared\n");
@@ -243,7 +249,8 @@ void network_clear(unsigned long id) {
 }
 
 /**
- * type = IN_NODES lub OUT_NODES
+ * Metoda służy do pobierania jednego z 2 możliwych stopni wierzchołka - wejściowego lub wyjściowego
+ * type = IN_NODES lub OUT_NODES - określa który stopień ma być zwrócony
  */
 size_t network_get_degree(unsigned long id, const char* label, const unsigned short type) {
 	size_t res = 0;
@@ -254,6 +261,7 @@ size_t network_get_degree(unsigned long id, const char* label, const unsigned sh
 			fprintf(stderr, ", node %s ", label);
 		map<Node, NodeInfo>& nodes = get<NODES>(iter->second);
 		map<Node, NodeInfo>::iterator it = nodes.find(label);
+
 		if (it != nodes.end()) {
 			res = ((type == IN_NODES) ? get<IN_NODES>(it->second) : get<OUT_NODES>(it->second)).size();
 			if (debug)

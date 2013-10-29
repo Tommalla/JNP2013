@@ -1,3 +1,6 @@
+/** Tomasz Wawreniuk i Tomasz Zakrzewski
+ *  JNP 2013/2014, Zadanie 2
+ */
 #include "growingnet.h"
 #include "network.h"
 

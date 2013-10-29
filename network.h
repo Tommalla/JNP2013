@@ -1,3 +1,6 @@
+/** Tomasz Wawreniuk i Tomasz Zakrzewski
+ *  JNP 2013/2014, Zadanie 2
+ */
 #ifndef NETWORK_H
 #define NETWORK_H
 
