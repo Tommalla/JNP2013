@@ -6,7 +6,7 @@ CFLAGS= -Wall --pedantic
 OEXT=.o
 
 ifeq ($(debuglevel),1)
-	CFLAGS+=-DDEBUG
+	CFLAGS+=-DDEBUG -g
 	OEXT=.dbg.o
 else
 	CFLAGS+=-O2
