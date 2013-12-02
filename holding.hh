@@ -6,16 +6,6 @@ typedef unsigned int Quantity;
 
 namespace util {
 	template<typename T>
-	constexpr const T& max(const T& a, const T& b) {
-		return (a > b) ? a : b;
-	}
-
-	template<typename T>
-	constexpr const T safe_add(const T& a, const T& b) {
-		return max(max(a, b), a + b);
-	}
-
-	template<typename T>
 	constexpr const T safe_sub(const T& a, const T& b) {
 		return (a >= b) ? a - b : 0;
 	}
@@ -30,7 +20,7 @@ template<Quantity accNum = 0u, Quantity hsNum = 0u, Quantity exNum = 0u>
 struct Company {
 	static constexpr auto _accNum = accNum;
 	static constexpr auto _hsNum = hsNum;
-	static constexpr auto _exNum = exNum;
+	static constexpr auto _exoNum = exNum;
 };
 
 typedef Company<1, 0, 0> Accountancy;
@@ -39,35 +29,35 @@ typedef Company<0, 0, 1> Exchange_office;
 
 template<class C1, class C2>
 struct add_comp {
-	typedef Company<C1::_accNum + C2::_accNum, C1::_hsNum + C2::_hsNum, C1::_exNum + C2::_exNum> type;
+	typedef Company<C1::_accNum + C2::_accNum, C1::_hsNum + C2::_hsNum, C1::_exoNum + C2::_exoNum> type;
 };
 
 template<class C1, class C2>
 struct remove_comp {
 	typedef Company<util::safe_sub(C1::_accNum, C2::_accNum), util::safe_sub(C1::_hsNum, C2::_hsNum),
-		util::safe_sub(C1::_exNum, C2::_exNum)> type;
+		util::safe_sub(C1::_exoNum, C2::_exoNum)> type;
 };
 
 template<class C, unsigned int n>
 struct multiply_comp {
-	typedef Company<C::_accNum * n, C::_hsNum * n, C::_exNum * n> type;
+	typedef Company<C::_accNum * n, C::_hsNum * n, C::_exoNum * n> type;
 };
 
 template<class C, unsigned int n>
 struct split_comp {
 	typedef Company<util::safe_div(C::_accNum, n), util::safe_div(C::_hsNum, n),
-		util::safe_div(C::_exNum, n)> type;
+		util::safe_div(C::_exoNum, n)> type;
 };
 
 template<class C>
 struct additive_expand_comp {
-	typedef Company<C::_accNum + 1, C::_hsNum + 1, C::_exNum + 1> type;
+	typedef Company<C::_accNum + 1, C::_hsNum + 1, C::_exoNum + 1> type;
 };
 
 template<class C>
 struct additive_rollup_comp {
 	typedef Company<util::safe_sub(C::_accNum, 1u), util::safe_sub(C::_hsNum, 1u),
-		util::safe_sub(C::_exNum, 1u)> type;
+		util::safe_sub(C::_exoNum, 1u)> type;
 };
 
 //template Group
@@ -78,14 +68,7 @@ class Group {
 		static constexpr company_type company = Company();
 
 		//constructors
-		Group() : qty(1), acc_val(DEF_ACC_VAL), hs_val(DEF_HS_VAL), exo_val(DEF_EXO_VAL) {
-			/*if (Company::_accNum == 0)
-				acc_val = 0;
-			if (Company::_hsNum == 0)
-				hs_val = 0;
-			if (Company::_exNum == 0)
-				exo_val = 0;*/
-		}
+		Group() : qty(1), acc_val(DEF_ACC_VAL), hs_val(DEF_HS_VAL), exo_val(DEF_EXO_VAL) {}
 
 		Group(unsigned int k) : Group{} {
 			qty = k;
@@ -126,7 +109,7 @@ class Group {
 
 		unsigned int get_value() const {
 			return qty * (Company::_accNum * acc_val + Company::_hsNum * hs_val
-				+ Company::_exNum * exo_val);
+				+ Company::_exoNum * exo_val);
 		}
 
 		//operators:
@@ -134,7 +117,7 @@ class Group {
 		const Group<Company>& operator+= (const Group<Company>& op) {
 			acc_val = weightedAvg(acc_val, op.acc_val, qty * Company::_accNum, op.qty * Company::_accNum);
 			hs_val = weightedAvg(hs_val, op.hs_val, qty * Company::_hsNum, op.qty* Company::_hsNum);
-			exo_val = weightedAvg(exo_val, op.exo_val, qty * Company::_exNum, op.qty * Company::_exNum);
+			exo_val = weightedAvg(exo_val, op.exo_val, qty * Company::_exoNum, op.qty * Company::_exoNum);
 
 			qty += op.qty;
 
@@ -150,7 +133,7 @@ class Group {
  		const Group<Company>& operator-= (const Group<Company>& op) {
 			acc_val = weightedAvg(acc_val, op.acc_val, qty * Company::_accNum, op.qty * Company::_accNum, true);
 			hs_val = weightedAvg(hs_val, op.hs_val, qty * Company::_hsNum, op.qty* Company::_hsNum, true);
-			exo_val = weightedAvg(exo_val, op.exo_val, qty * Company::_exNum, op.qty * Company::_exNum, true);
+			exo_val = weightedAvg(exo_val, op.exo_val, qty * Company::_exoNum, op.qty * Company::_exoNum, true);
 
 			qty = util::safe_sub(qty, op.qty);
 
@@ -251,7 +234,7 @@ template<class C1, class C2>
 bool operator<= (const Group<C1>& a, const Group<C2>& b) {
 	if (typeid(C1) == typeid(C2))
 		return a.qty <= b.qty;
-	return a.qty * C1::_exNum <= b.qty * C2::_exNum && a.qty * C1::_hsNum <= b.qty * C2::_hsNum;
+	return a.qty * C1::_exoNum <= b.qty * C2::_exoNum && a.qty * C1::_hsNum <= b.qty * C2::_hsNum;
 }
 
 template<class C1, class C2>
@@ -269,7 +252,7 @@ std::ostream& operator<< (std::ostream& out, const Group<Company>& g) {
 	out << "Number of companies: " << g.qty <<"; Value: " << g.get_value() <<
 	"\nAccountancies value: " << g.acc_val << ", Hunting shops value: " << g.hs_val <<
 	", Exchange offices value: " << g.exo_val << "\nAccountancies: " << Company::_accNum <<
-	", Hunting shops: " << Company::_hsNum << ", Exchange offices: " << Company::_exNum << "\n";
+	", Hunting shops: " << Company::_hsNum << ", Exchange offices: " << Company::_exoNum << "\n";
 	return out;
 }
 
