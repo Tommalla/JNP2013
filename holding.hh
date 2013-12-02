@@ -51,19 +51,18 @@ struct remove_comp {
 
 template<class C, unsigned int n>
 struct multiply_comp {
-	typedef Company<util::max(C::_accNum * n, C::_accNum), util::max(C::_hsNum * n, C::_hsNum),
-		util::max(C::_exNum * n, C::_exNum)> type;
+	typedef Company<C::_accNum * n, C::_hsNum * n, C::_exNum * n> type;
 };
 
 template<class C, unsigned int n>
 struct split_comp {
-	typedef Company<C::_accNum / n, C::_hsNum / n, C::_exNum / n> type;
+	typedef Company<util::safe_div(C::_accNum, n), util::safe_div(C::_hsNum, n),
+		util::safe_div(C::_exNum, n)> type;
 };
 
 template<class C>
 struct additive_expand_comp {
-	typedef Company<util::max(C::_accNum + 1, C::_accNum), util::max(C::_hsNum + 1, C::_hsNum),
-		util::max(C::_exNum + 1, C::_exNum)> type;
+	typedef Company<C::_accNum + 1, C::_hsNum + 1, C::_exNum + 1> type;
 };
 
 template<class C>
@@ -189,6 +188,24 @@ class Group {
 			return res;
  		}
 
+ 		template<class C1, class C2>
+ 		friend bool operator== (const Group<C1>& a, const Group<C2>& b);
+
+ 		template<class C1, class C2>
+ 		friend bool operator!= (const Group<C1>& a, const Group<C2>& b);
+
+		template<class C1, class C2>
+		friend bool operator< (const Group<C1>& a, const Group<C2>& b);
+
+		template<class C1, class C2>
+		friend bool operator<= (const Group<C1>& a, const Group<C2>& b);
+
+		template<class C1, class C2>
+		friend bool operator> (const Group<C1>& a, const Group<C2>& b);
+
+		template<class C1, class C2>
+		friend bool operator>= (const Group<C1>& a, const Group<C2>& b);
+
  		template<class T>
  		friend std::ostream& operator<< (std::ostream& out, const Group<T>& g);
 
@@ -208,6 +225,40 @@ class Group {
 
 };
 
+//FIXME: Those might need changing according to the forum
+template<class C1, class C2>
+bool operator== (const Group<C1>& a, const Group<C2>& b) {
+	return typeid(C1) == typeid(C2) && a.qty == b.qty && a.hs_val == b.hs_val &&
+		a.exo_val == b.exo_val;
+}
+
+template<class C1, class C2>
+bool operator!= (const Group<C1>& a, const Group<C2>& b) {
+	return !(a == b);
+}
+
+template<class C1, class C2>
+bool operator< (const Group<C1>& a, const Group<C2>& b) {
+	return a <= b && a != b;
+}
+
+template<class C1, class C2>
+bool operator<= (const Group<C1>& a, const Group<C2>& b) {
+	if (typeid(C1) == typeid(C2))
+		return a.qty <= b.qty;
+	return a.qty * C1::_exNum <= b.qty * C2::_exNum && a.qty * C1::_hsNum <= b.qty * C2::_hsNum;
+}
+
+template<class C1, class C2>
+bool operator> (const Group<C1>&a, const Group<C2>& b) {
+	return b < a;
+}
+
+template<class C1, class C2>
+bool operator>= (const Group<C1>& a, const Group<C2>& b) {
+	return b <= a;
+}
+
 template<class Company>
 std::ostream& operator<< (std::ostream& out, const Group<Company>& g) {
 	out << "Number of companies: " << g.qty <<"; Value: " << g.get_value() <<
@@ -215,6 +266,53 @@ std::ostream& operator<< (std::ostream& out, const Group<Company>& g) {
 	", Exchange offices value: " << g.exo_val << "\nAccountancies: " << Company::_accNum <<
 	", Hunting shops: " << Company::_hsNum << ", Exchange offices: " << Company::_exNum << "\n";
 	return out;
+}
+
+//global methods
+
+//Copies vals from s2 to s1
+template<class C1, class C2>
+void copyVals(Group<C1>& s1, Group<C2> const& s2) {
+	s1.set_acc_val(s2.get_acc_val());
+	s1.set_hs_val(s2.get_hs_val());
+	s1.set_exo_val(s2.get_exo_val());
+}
+
+template<class C>
+Group<typename additive_expand_comp<C>::type> const additive_expand_group(Group<C> const &s1) {
+	Group<typename additive_expand_comp<C>::type> res(s1.get_size());
+	copyVals(res, s1);
+
+	return res;
+}
+
+template<class C>
+Group<typename multiply_comp<C, 10>::type> const multiplicative_expand_group(Group<C> const &s1) {
+	Group<typename multiply_comp<C, 10>::type> res(s1.get_size());
+	copyVals(res, s1);
+
+	return res;
+}
+
+template<class C>
+Group<typename additive_rollup_comp<C>::type> const additive_rollup_group(Group<C> const &s1) {
+	Group<typename additive_rollup_comp<C>::type> res(s1.get_size());
+	copyVals(res, s1);
+
+	return res;
+}
+
+template<class C>
+Group<typename split_comp<C, 10>::type> const multiplicative_rollup_group(Group<C> const &s1) {
+	Group<typename split_comp<C, 10>::type> res(s1.get_size());
+	copyVals(res, s1);
+
+	return res;
+}
+
+template<class C1, class C2, class C3>
+bool solve_auction(Group<C1> const &g1, Group<C2> const &g2, Group<C3> const &g3) {
+	return (g1 >= g2 && g1 >= g3) || (g2 >= g1 && g2 >= g3) || (g3 >= g1 && g3 >= g2);
 }
 
 #endif
