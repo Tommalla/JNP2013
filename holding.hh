@@ -1,6 +1,5 @@
 #ifndef HOLDING_HH
 #define HOLDING_HH
-#include <cstdio>
 #include <iostream>
 
 typedef unsigned int Quantity;
@@ -71,7 +70,7 @@ struct additive_rollup_comp {
 		util::safe_sub(C::_exNum, 1u)> type;
 };
 
-//TODO: template Group
+//template Group
 template<class Company>
 class Group {
 	public:
@@ -79,15 +78,21 @@ class Group {
 		static constexpr company_type company = Company();
 
 		//constructors
-		Group() : qty(1), acc_val(DEF_ACC_VAL), hs_val(DEF_HS_VAL), exo_val(DEF_EXO_VAL) {}
+		Group() : qty(1), acc_val(DEF_ACC_VAL), hs_val(DEF_HS_VAL), exo_val(DEF_EXO_VAL) {
+			/*if (Company::_accNum == 0)
+				acc_val = 0;
+			if (Company::_hsNum == 0)
+				hs_val = 0;
+			if (Company::_exNum == 0)
+				exo_val = 0;*/
+		}
 
 		Group(unsigned int k) : Group{} {
 			qty = k;
 		}
 
-		Group(Group<Company> const & other) : Group{} {
-			qty = other.qty;
-		}
+		Group(Group<Company> const & other) : qty(other.qty), acc_val(other.acc_val),
+			hs_val(other.hs_val), exo_val(other.exo_val) {}
 
 		//setters
 		void set_acc_val(unsigned int i) {
@@ -127,9 +132,9 @@ class Group {
 		//operators:
 		//FIXME try and figure out how to get rid of this copypasta
 		const Group<Company>& operator+= (const Group<Company>& op) {
-			acc_val = weightedAvg(acc_val, op.acc_val, qty, op.qty);
-			hs_val = weightedAvg(hs_val, op.hs_val, qty, op.qty);
-			exo_val = weightedAvg(exo_val, op.exo_val, qty, op.qty);
+			acc_val = weightedAvg(acc_val, op.acc_val, qty * Company::_accNum, op.qty * Company::_accNum);
+			hs_val = weightedAvg(hs_val, op.hs_val, qty * Company::_hsNum, op.qty* Company::_hsNum);
+			exo_val = weightedAvg(exo_val, op.exo_val, qty * Company::_exNum, op.qty * Company::_exNum);
 
 			qty += op.qty;
 
@@ -143,9 +148,9 @@ class Group {
 		}
 
  		const Group<Company>& operator-= (const Group<Company>& op) {
-			acc_val = weightedAvg(acc_val, op.acc_val, qty, op.qty, true);
-			hs_val = weightedAvg(hs_val, op.hs_val, qty, op.qty, true);
-			exo_val = weightedAvg(exo_val, op.exo_val, qty, op.qty, true);
+			acc_val = weightedAvg(acc_val, op.acc_val, qty * Company::_accNum, op.qty * Company::_accNum, true);
+			hs_val = weightedAvg(hs_val, op.hs_val, qty * Company::_hsNum, op.qty* Company::_hsNum, true);
+			exo_val = weightedAvg(exo_val, op.exo_val, qty * Company::_exNum, op.qty * Company::_exNum, true);
 
 			qty = util::safe_sub(qty, op.qty);
 

@@ -29,7 +29,7 @@ int main() {
  	Group<guns> s5(20);
 	Group<Company<2, 1, 1>> g;
 
-	assert(g.get_value() == 50 + 150 + 30);
+	assert(g.get_value() == 30 + 150 + 50);
 
  	assert((s2 + s3).get_size() == 40);
  	assert((s2 += s2).get_size() == 40);
