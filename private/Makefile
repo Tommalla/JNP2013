@@ -1,13 +1,17 @@
 .PHONY: clean
 
-tests: main miel
+CXXFLAGS = $(CFLAGS) -std=c++11 -Wall -pedantic -g
 
+tests: main miel test_holding
 
 main: main.cpp ../holding.hh
-	g++ -std=c++11 -Wall --pedantic -O2 main.cpp -o main
+	g++ $(CXXFLAGS) main.cpp -o main
 
 miel: miel.cpp ../holding.hh
-	g++ -std=c++11 -Wall --pedantic -O2 miel.cpp -o miel
+	g++ $(CXXFLAGS) miel.cpp -o miel
+
+test_holding: test_holding.cc ../holding.hh
+	g++ $(CXXFLAGS) test_holding.cc -o test_holding
 
 clean:
-	rm -rf main
+	rm -rf main miel test_holding

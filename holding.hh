@@ -1,9 +1,14 @@
+/* Tomasz Zakrzewski, Jan Darowski
+ * JNP4
+ */
 #ifndef HOLDING_HH
 #define HOLDING_HH
 #include <iostream>
+#include <typeinfo>
 
 typedef unsigned int Quantity;
 
+// Always positive operations
 namespace util {
 	template<typename T>
 	constexpr const T safe_sub(const T& a, const T& b) {
@@ -16,48 +21,51 @@ namespace util {
 	}
 }
 
-template<Quantity accNum = 0u, Quantity hsNum = 0u, Quantity exNum = 0u>
+template<Quantity acc_Num = 0u, Quantity hs_Num = 0u, Quantity exo_Num = 0u>
 struct Company {
-	static constexpr auto _accNum = accNum;
-	static constexpr auto _hsNum = hsNum;
-	static constexpr auto _exoNum = exNum;
+	static constexpr auto accNum = acc_Num;
+	static constexpr auto hsNum = hs_Num;
+	static constexpr auto exoNum = exo_Num;
 };
 
+// Basic Company types
 typedef Company<1, 0, 0> Accountancy;
 typedef Company<0, 1, 0> Hunting_shop;
 typedef Company<0, 0, 1> Exchange_office;
 
+
+// Companies manipulation methods
 template<class C1, class C2>
 struct add_comp {
-	typedef Company<C1::_accNum + C2::_accNum, C1::_hsNum + C2::_hsNum, C1::_exoNum + C2::_exoNum> type;
+	typedef Company<C1::accNum + C2::accNum, C1::hsNum + C2::hsNum, C1::exoNum + C2::exoNum> type;
 };
 
 template<class C1, class C2>
 struct remove_comp {
-	typedef Company<util::safe_sub(C1::_accNum, C2::_accNum), util::safe_sub(C1::_hsNum, C2::_hsNum),
-		util::safe_sub(C1::_exoNum, C2::_exoNum)> type;
+	typedef Company<util::safe_sub(C1::accNum, C2::accNum), util::safe_sub(C1::hsNum, C2::hsNum),
+		util::safe_sub(C1::exoNum, C2::exoNum)> type;
 };
 
 template<class C, unsigned int n>
 struct multiply_comp {
-	typedef Company<C::_accNum * n, C::_hsNum * n, C::_exoNum * n> type;
+	typedef Company<C::accNum * n, C::hsNum * n, C::exoNum * n> type;
 };
 
 template<class C, unsigned int n>
 struct split_comp {
-	typedef Company<util::safe_div(C::_accNum, n), util::safe_div(C::_hsNum, n),
-		util::safe_div(C::_exoNum, n)> type;
+	typedef Company<util::safe_div(C::accNum, n), util::safe_div(C::hsNum, n),
+		util::safe_div(C::exoNum, n)> type;
 };
 
 template<class C>
 struct additive_expand_comp {
-	typedef Company<C::_accNum + 1, C::_hsNum + 1, C::_exoNum + 1> type;
+	typedef Company<C::accNum + 1, C::hsNum + 1, C::exoNum + 1> type;
 };
 
 template<class C>
 struct additive_rollup_comp {
-	typedef Company<util::safe_sub(C::_accNum, 1u), util::safe_sub(C::_hsNum, 1u),
-		util::safe_sub(C::_exoNum, 1u)> type;
+	typedef Company<util::safe_sub(C::accNum, 1u), util::safe_sub(C::hsNum, 1u),
+		util::safe_sub(C::exoNum, 1u)> type;
 };
 
 //template Group
@@ -108,16 +116,15 @@ class Group {
 		}
 
 		unsigned int get_value() const {
-			return qty * (Company::_accNum * acc_val + Company::_hsNum * hs_val
-				+ Company::_exoNum * exo_val);
+			return qty * (Company::accNum * acc_val + Company::hsNum * hs_val
+				+ Company::exoNum * exo_val);
 		}
 
-		//operators:
-		//FIXME try and figure out how to get rid of this copypasta
+		// single argument operators
 		const Group<Company>& operator+= (const Group<Company>& op) {
-			acc_val = weightedAvg(acc_val, op.acc_val, qty * Company::_accNum, op.qty * Company::_accNum);
-			hs_val = weightedAvg(hs_val, op.hs_val, qty * Company::_hsNum, op.qty* Company::_hsNum);
-			exo_val = weightedAvg(exo_val, op.exo_val, qty * Company::_exoNum, op.qty * Company::_exoNum);
+			acc_val = weightedAvg(acc_val, op.acc_val, qty * Company::accNum, op.qty * Company::accNum);
+			hs_val = weightedAvg(hs_val, op.hs_val, qty * Company::hsNum, op.qty* Company::hsNum);
+			exo_val = weightedAvg(exo_val, op.exo_val, qty * Company::exoNum, op.qty * Company::exoNum);
 
 			qty += op.qty;
 
@@ -130,57 +137,58 @@ class Group {
 			return res;
 		}
 
- 		const Group<Company>& operator-= (const Group<Company>& op) {
-			acc_val = weightedAvg(acc_val, op.acc_val, qty * Company::_accNum, op.qty * Company::_accNum, true);
-			hs_val = weightedAvg(hs_val, op.hs_val, qty * Company::_hsNum, op.qty* Company::_hsNum, true);
-			exo_val = weightedAvg(exo_val, op.exo_val, qty * Company::_exoNum, op.qty * Company::_exoNum, true);
+		const Group<Company>& operator-= (const Group<Company>& op) {
+			acc_val = weightedAvg(acc_val, op.acc_val, qty * Company::accNum, op.qty * Company::accNum, true);
+			hs_val = weightedAvg(hs_val, op.hs_val, qty * Company::hsNum, op.qty* Company::hsNum, true);
+			exo_val = weightedAvg(exo_val, op.exo_val, qty * Company::exoNum, op.qty * Company::exoNum, true);
 
 			qty = util::safe_sub(qty, op.qty);
 
 			return *this;
- 		}
+		}
 
- 		const Group<Company> operator- (const Group<Company>& op) {
+		const Group<Company> operator- (const Group<Company>& op) {
 			Group<Company> res(*this);
 			res -= op;
 			return res;
- 		}
+		}
 
- 		const Group<Company>& operator*= (const Quantity& op) {
+		const Group<Company>& operator*= (const Quantity& op) {
 			qty *= op;
 			acc_val = util::safe_div(acc_val, op);
 			hs_val = util::safe_div(hs_val, op);
 			exo_val = util::safe_div(exo_val, op);
 
 			return *this;
- 		}
+		}
 
- 		const Group<Company> operator* (const Quantity& op) {
+		const Group<Company> operator* (const Quantity& op) {
 			Group<Company> res(*this);
 			res *= op;
 			return res;
- 		}
+		}
 
- 		const Group<Company>& operator/= (const Quantity& op) {
+		const Group<Company>& operator/= (const Quantity& op) {
 			qty = util::safe_div(qty, op);
 			acc_val *= op;
 			hs_val *= op;
 			exo_val *= op;
 
 			return *this;
- 		}
+		}
 
- 		const Group<Company> operator/ (const Quantity &op) {
+		const Group<Company> operator/ (const Quantity &op) {
 			Group<Company> res(*this);
 			res /= op;
 			return res;
- 		}
+		}
 
- 		template<class C1, class C2>
- 		friend bool operator== (const Group<C1>& a, const Group<C2>& b);
+		// Two arguments operators
+		template<class C1, class C2>
+		friend bool operator== (const Group<C1>& a, const Group<C2>& b);
 
- 		template<class C1, class C2>
- 		friend bool operator!= (const Group<C1>& a, const Group<C2>& b);
+		template<class C1, class C2>
+		friend bool operator!= (const Group<C1>& a, const Group<C2>& b);
 
 		template<class C1, class C2>
 		friend bool operator< (const Group<C1>& a, const Group<C2>& b);
@@ -194,10 +202,11 @@ class Group {
 		template<class C1, class C2>
 		friend bool operator>= (const Group<C1>& a, const Group<C2>& b);
 
- 		template<class T>
- 		friend std::ostream& operator<< (std::ostream& out, const Group<T>& g);
+		template<class T>
+		friend std::ostream& operator<< (std::ostream& out, const Group<T>& g);
 
 	private:
+		// Companies quantity and specific shop types values
 		Quantity qty, acc_val, hs_val, exo_val;
 
 		static constexpr Quantity DEF_ACC_VAL = 15;
@@ -213,11 +222,14 @@ class Group {
 
 };
 
-//FIXME: Those might need changing according to the forum
+// Comparing operators implementation
+
+// check total amount of hunter shops and exchange offices
 template<class C1, class C2>
 bool operator== (const Group<C1>& a, const Group<C2>& b) {
-	return typeid(C1) == typeid(C2) && a.qty == b.qty && a.hs_val == b.hs_val &&
-		a.exo_val == b.exo_val;
+	if (typeid(C1) == typeid(C2))
+		return a.get_size() == b.get_size();
+	return (a.qty * C1::hsNum == b.qty * C2::hsNum) && (a.qty * C1::exoNum ==  b.qty * C2::exoNum);
 }
 
 template<class C1, class C2>
@@ -234,7 +246,7 @@ template<class C1, class C2>
 bool operator<= (const Group<C1>& a, const Group<C2>& b) {
 	if (typeid(C1) == typeid(C2))
 		return a.qty <= b.qty;
-	return a.qty * C1::_exoNum <= b.qty * C2::_exoNum && a.qty * C1::_hsNum <= b.qty * C2::_hsNum;
+	return (a.qty * C1::exoNum <= b.qty * C2::exoNum) && (a.qty * C1::hsNum <= b.qty * C2::hsNum);
 }
 
 template<class C1, class C2>
@@ -251,12 +263,12 @@ template<class Company>
 std::ostream& operator<< (std::ostream& out, const Group<Company>& g) {
 	out << "Number of companies: " << g.qty <<"; Value: " << g.get_value() <<
 	"\nAccountancies value: " << g.acc_val << ", Hunting shops value: " << g.hs_val <<
-	", Exchange offices value: " << g.exo_val << "\nAccountancies: " << Company::_accNum <<
-	", Hunting shops: " << Company::_hsNum << ", Exchange offices: " << Company::_exoNum << "\n";
+	", Exchange offices value: " << g.exo_val << "\nAccountancies: " << Company::accNum <<
+	", Hunting shops: " << Company::hsNum << ", Exchange offices: " << Company::exoNum << "\n";
 	return out;
 }
 
-//global methods
+//Global methods
 
 //Copies vals from s2 to s1
 template<class C1, class C2>
