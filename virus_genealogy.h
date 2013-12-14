@@ -48,6 +48,9 @@ public:
 	//TODO the rest of the methods
 
 private:
+	VirusGenealogy(VirusGenealogy<Virus> const &other);
+	VirusGenealogy& operator=(VirusGenealogy<Virus> const &other);
+
 	const typename Virus::id_type stem_id;
 
 	class Node {
