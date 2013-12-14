@@ -37,7 +37,7 @@ class VirusGenealogy {
 			parents.insert(parent);
 		}
 
-		Node(typename Virus::id_type const &id, set<weak_ptr<Node>> parent_set) : vir(id), id{id} {
+		Node(typename Virus::id_type const &id, set<weak_ptr<Node>, std::owner_less<weak_ptr<Node>>> parent_set ) : vir(id), id{id} {
 			
 			parents = std::move(parent_set);
 		}
@@ -91,6 +91,20 @@ public:
 			res.push_back(ptr.lock()->id);
 
 		return res;
+	}
+
+	void create(typename Virus::id_type const &id, std::vector<typename Virus::id_type> const &parent_ids) {
+		if(parent_ids.size() == 0) throw VirusNotFound();
+		typename Graph::const_iterator iter;
+		set<weak_ptr<Node>, std::owner_less<weak_ptr<Node>>> parent_set;
+		for(auto ptr = parent_ids.begin(); ptr != parent_ids.end(); ptr++)
+			parent_set.insert( weak_ptr<Node> ( get_iterator( *ptr )->second ) );
+
+		shared_ptr<Node> sp( new Node(id, parent_set) );
+		for(auto ptr = parent_set.begin(); ptr != parent_set.end(); ptr++)
+			ptr->lock()->children.insert(shared_ptr<Node>(sp));
+		
+		nodes.emplace(id, weak_ptr<Node>(sp));
 	}
 
 	//TODO try & catch on get_iterator here
