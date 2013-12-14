@@ -6,6 +6,8 @@
 #include <memory>
 #include <vector>
 
+#include <iostream>
+
 using std::exception;
 using std::map;
 using std::set;
@@ -26,13 +28,15 @@ class VirusGenealogy {
 	VirusGenealogy(VirusGenealogy<Virus> const &other) = delete;
 	VirusGenealogy& operator=(VirusGenealogy<Virus> const &other) = delete;
 
-	const typename Virus::id_type stem_id;
-
 	class Node {
+
 	public:
-		Node(typename Virus::id_type const &id, Node* parent) : id{id} {
-			if (parent != nullptr)
-				parents.insert(weak_ptr<Node>());
+		const Virus vir;
+
+		Node(typename Virus::id_type const &id) : vir(id), id{id} {}
+
+		Node(typename Virus::id_type const &id, weak_ptr<Node> parent) : vir(id), id{id} {
+			parents.insert(parent);
 		}
 
 		//TODO second ctor
@@ -42,13 +46,15 @@ class VirusGenealogy {
 		set<weak_ptr<Node>, std::owner_less<weak_ptr<Node>>> parents;
 	};
 
-	typedef map<typename Virus::id_type, Node> Graph;
+	const typename Virus::id_type stem_id;
+	typedef map<typename Virus::id_type, weak_ptr<Node>> Graph;
 	Graph nodes;
+	shared_ptr<Node> stem;
 
 public:
 	//constructor
-	VirusGenealogy(typename Virus::id_type const &stem_id) : stem_id{stem_id} {
-		nodes.emplace(stem_id, Node(stem_id, nullptr));	//FIXME add strong guarantee
+	VirusGenealogy(typename Virus::id_type const &stem_id) : stem_id{stem_id}, stem( new Node(stem_id) ) {
+		nodes.emplace(stem_id, weak_ptr<Node>(stem));	//FIXME add strong guarantee
 	}
 
 	//getters
@@ -62,7 +68,7 @@ public:
 			throw VirusNotFound();
 
 		vector<typename Virus::id_type> res;
-		for (auto const &ptr: iter->second.children)
+		for (auto const &ptr: iter->second.lock()->children)
 			res.push_back(ptr->id);
 
 		return res;
@@ -74,7 +80,7 @@ public:
 			throw VirusNotFound();
 
 		vector<typename Virus::id_type> res;
-		for (auto const &ptr: iter->second.parents)
+		for (auto const &ptr: iter->second.lock()->parents)
 			res.push_back(ptr.lock()->id);
 
 		return res;
@@ -84,6 +90,34 @@ public:
 	bool exists(typename Virus::id_type const &id) const {
 		return nodes.find(id) != nodes.end();
 	}
+	
+	void create(typename Virus::id_type const &id, typename Virus::id_type const &parent_id) {
+		auto iter = nodes.find(parent_id);
+		if (iter == nodes.end())
+			throw VirusNotFound();
+		shared_ptr<Node> sp( new Node(id, iter->second ));
+		nodes.emplace(id, weak_ptr<Node>(sp));
+		iter->second.lock()->children.insert(sp);
+	}
+
+	void connect(typename Virus::id_type const &child_id, typename Virus::id_type const &parent_id) {
+		auto parent = nodes.find(parent_id), child = nodes.find(child_id);
+		if (parent == nodes.end() || child == nodes.end())
+			throw VirusNotFound();
+
+		parent->second.lock()->children.insert( shared_ptr<Node> ( child->second ) );
+		child->second.lock()->parents.insert( weak_ptr<Node> ( parent->second ) );
+	}
+
+	//FIXME
+	/*
+	Virus& operator[](typename Virus::id_type const &id) const {
+		auto iter = nodes.find(id);
+		if (iter == nodes.end())
+			throw VirusNotFound();
+
+		return *(iter->second.vir);
+	}*/
 };
 
 #endif
