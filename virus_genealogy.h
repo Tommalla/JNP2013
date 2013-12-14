@@ -6,8 +6,6 @@
 #include <memory>
 #include <vector>
 
-#include <iostream>
-
 using std::exception;
 using std::map;
 using std::set;
@@ -33,10 +31,15 @@ class VirusGenealogy {
 	public:
 		const Virus vir;
 
-		Node(typename Virus::id_type const &id) : vir(id), id{id} {}
+		Node(typename Virus::id_type const &id) : vir(id), id{id} {} //for stem
 
 		Node(typename Virus::id_type const &id, weak_ptr<Node> parent) : vir(id), id{id} {
 			parents.insert(parent);
+		}
+
+		Node(typename Virus::id_type const &id, set<weak_ptr<Node>> parent_set) : vir(id), id{id} {
+			
+			parents = std::move(parent_set);
 		}
 
 		//TODO second ctor
@@ -51,6 +54,16 @@ class VirusGenealogy {
 	Graph nodes;
 	shared_ptr<Node> stem;
 
+ 	typename Graph::const_iterator get_iterator(typename Virus::id_type const &id) const {
+		auto iter = nodes.find(id);
+		if(iter != nodes.end())
+			if(iter->second.use_count() == 0)
+				iter = nodes.end();
+		if(iter == nodes.end()) 
+			throw VirusNotFound();
+		return iter;
+	}
+
 public:
 	//constructor
 	VirusGenealogy(typename Virus::id_type const &stem_id) : stem_id{stem_id}, stem( new Node(stem_id) ) {
@@ -63,10 +76,7 @@ public:
 	}
 
 	std::vector<typename Virus::id_type> get_children(typename Virus::id_type const &id) const {
-		auto iter = nodes.find(id);
-		if (iter == nodes.end())
-			throw VirusNotFound();
-
+		auto iter = get_iterator(id);
 		vector<typename Virus::id_type> res;
 		for (auto const &ptr: iter->second.lock()->children)
 			res.push_back(ptr->id);
@@ -75,10 +85,7 @@ public:
 	}
 
 	std::vector<typename Virus::id_type> get_parents(typename Virus::id_type const &id) const {
-		auto iter = nodes.find(id);
-		if (iter == nodes.end())
-			throw VirusNotFound();
-
+		auto iter = get_iterator(id);
 		vector<typename Virus::id_type> res;
 		for (auto const &ptr: iter->second.lock()->parents)
 			res.push_back(ptr.lock()->id);
@@ -86,38 +93,32 @@ public:
 		return res;
 	}
 
-	//TODO the rest of the methods
+	//TODO try & catch on get_iterator here
 	bool exists(typename Virus::id_type const &id) const {
-		return nodes.find(id) != nodes.end();
+		return get_iterator(id)!=nodes.end();
 	}
 	
 	void create(typename Virus::id_type const &id, typename Virus::id_type const &parent_id) {
-		auto iter = nodes.find(parent_id);
-		if (iter == nodes.end())
-			throw VirusNotFound();
+		auto iter = get_iterator(parent_id);
 		shared_ptr<Node> sp( new Node(id, iter->second ));
 		nodes.emplace(id, weak_ptr<Node>(sp));
 		iter->second.lock()->children.insert(sp);
 	}
 
-	void connect(typename Virus::id_type const &child_id, typename Virus::id_type const &parent_id) {
-		auto parent = nodes.find(parent_id), child = nodes.find(child_id);
-		if (parent == nodes.end() || child == nodes.end())
-			throw VirusNotFound();
 
+
+	void connect(typename Virus::id_type const &child_id, typename Virus::id_type const &parent_id) {
+		auto parent = get_iterator(parent_id), child = get_iterator(child_id);
 		parent->second.lock()->children.insert( shared_ptr<Node> ( child->second ) );
 		child->second.lock()->parents.insert( weak_ptr<Node> ( parent->second ) );
 	}
 
-	//FIXME
-	/*
-	Virus& operator[](typename Virus::id_type const &id) const {
-		auto iter = nodes.find(id);
-		if (iter == nodes.end())
-			throw VirusNotFound();
 
-		return *(iter->second.vir);
-	}*/
+	//TODO sluzy do debugu, usunac na koncu
+	int get_usage(typename Virus::id_type const &id){
+		auto iter = get_iterator(id);
+		return iter->second.use_count();
+	}
 };
 
 #endif
