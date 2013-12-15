@@ -22,7 +22,7 @@ class TriedToRemoveStemVirus : public exception {};
 
 template<class Virus>
 class VirusGenealogy {
-
+private:
 	VirusGenealogy(VirusGenealogy<Virus> const &other) = delete;
 	VirusGenealogy& operator=(VirusGenealogy<Virus> const &other) = delete;
 
@@ -41,8 +41,9 @@ class VirusGenealogy {
 			parents.insert(parent);
 		}
 
+		//FIXME pass a vector?
 		Node(typename Virus::id_type const &id, ParentSet const &parent_set) : vir{id},
-			id{id}, parents(parent_set) {}
+			id{id}, parents{parent_set} {}
 
 		const typename Virus::id_type id;
 		ChildrenSet children;
