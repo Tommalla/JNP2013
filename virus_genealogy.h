@@ -13,7 +13,6 @@ using std::shared_ptr;
 using std::weak_ptr;
 using std::vector;
 
-//FIXME something should probrably be done to fix the what() method of those:
 class VirusAlreadyCreated : public exception {
 	virtual const char* what() const throw()
 	{
@@ -60,11 +59,9 @@ private:
 		~Node(){
 			auto iter = container->nodes.find(id);
 
-			//usuwa powiązania z dziecmi
 			for(auto ptr = children.begin(); ptr != children.end(); ptr++)
 				(*ptr)->parents.erase( iter->second );
 
-			//usuwa sie z mapy
 			container->nodes.erase(iter);
 		}
 
@@ -104,7 +101,6 @@ public:
 		return stem_id;
 	}
 
-	//strong guarantee
 	std::vector<typename Virus::id_type> get_children(typename Virus::id_type const &id) const {
 		auto iter = get_iterator(id);
 		vector<typename Virus::id_type> res;
@@ -114,7 +110,6 @@ public:
 		return res;
 	}
 
-	//strong guarantee
 	std::vector<typename Virus::id_type> get_parents(typename Virus::id_type const &id) const {
 		auto iter = get_iterator(id);
 		vector<typename Virus::id_type> res;
@@ -124,21 +119,29 @@ public:
 		return res;
 	}
 
-	//strong guarantee
+	void create(typename Virus::id_type const &id, typename Virus::id_type const &parent_id) {
+		try {
+			get_iterator(id);
+			throw VirusAlreadyCreated();
+		}
+		catch (VirusNotFound& e) {}
+		auto iter = get_iterator(parent_id);
+		typename Node::SharedPtr sp( new Node(id, this, iter->second ));
+		nodes.emplace(id, typename Node::WeakPtr(sp));
+		iter->second.lock()->children.insert(sp);
+	}
+
 	void create(typename Virus::id_type const &id, std::vector<typename Virus::id_type> const &parent_ids) {
 		if(parent_ids.size() == 0)
 			throw VirusNotFound();
-
-		typename Node::ParentSet parent_set;
-		for(auto ptr = parent_ids.begin(); ptr != parent_ids.end(); ptr++) {
-			try {
-				parent_set.insert(typename Node::WeakPtr( get_iterator( *ptr )->second ) );
-			}
-			catch (exception& e) {
-				throw VirusAlreadyCreated();
-			}
+		try {
+			get_iterator(id);
+			throw VirusAlreadyCreated();
 		}
-			
+		catch (VirusNotFound& e) {}
+		typename Node::ParentSet parent_set;
+		for(auto ptr = parent_ids.begin(); ptr != parent_ids.end(); ptr++)
+				parent_set.insert(typename Node::WeakPtr( get_iterator( *ptr )->second ) );
 
 		typename Node::SharedPtr sp( new Node(id, this, parent_set) );
 		for(auto ptr = sp->parents.begin(); ptr != sp->parents.end(); ptr++)
@@ -147,7 +150,6 @@ public:
 		nodes.emplace(id, typename Node::WeakPtr(sp));
 	}
 
-	//no-throw guarantee
 	bool exists(typename Virus::id_type const &id) const {
 		auto k = nodes.end();
 		try{ k = get_iterator(id); }
@@ -155,45 +157,25 @@ public:
 		return k != nodes.end();
 	}
 
-	//strong guarantee
-	void create(typename Virus::id_type const &id, typename Virus::id_type const &parent_id) {
-		typename Graph::const_iterator iter;
-		try {
-			iter = get_iterator(parent_id);
-		}
-		catch (exception& e) {
-			throw VirusAlreadyCreated();
-		}
-		typename Node::SharedPtr sp( new Node(id, this, iter->second ));
-		nodes.emplace(id, typename Node::WeakPtr(sp));
-		iter->second.lock()->children.insert(sp);
-	}
-
-	//strong guarantee
 	void connect(typename Virus::id_type const &child_id, typename Virus::id_type const &parent_id) {
 		auto parent = get_iterator(parent_id), child = get_iterator(child_id);
 		parent->second.lock()->children.insert( typename Node::SharedPtr( child->second ) );
 		child->second.lock()->parents.insert( typename Node::WeakPtr( parent->second ) );
 	}
 
-	//guarantee?
 	void remove(typename Virus::id_type const &id) {
 		auto iter = get_iterator(id);
-		//sprawdzamy czy nie stem
-		if (iter->first == stem_id) throw TriedToRemoveStemVirus();
+		if (iter->first == stem_id) 
+			throw TriedToRemoveStemVirus();
 
 		typename Node::SharedPtr sp(iter->second);
-
-		//usuwa powiązania z rodzicami
-		
 		for(auto ptr = iter->second.lock()->parents.begin(); ptr != iter->second.lock()->parents.end(); ptr++)
 			(*ptr).lock()->children.erase( sp );
 
-		//z mapy usunie sie sam, destruktorem Node :)
+		//~Node() runs when out of this scope
 	}
 
-	Virus& operator[](typename Virus::id_type const &id)
-	{
+	Virus& operator[](typename Virus::id_type const &id) const {
 		return get_iterator(id)->second.lock()->vir;
 	}
 	
