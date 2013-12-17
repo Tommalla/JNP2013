@@ -14,11 +14,26 @@ using std::weak_ptr;
 using std::vector;
 
 //FIXME something should probrably be done to fix the what() method of those:
-class VirusAlreadyCreated : public exception {};
+class VirusAlreadyCreated : public exception {
+	virtual const char* what() const throw()
+	{
+		return "VirusAlreadyCreated";
+	}
+};
 
-class VirusNotFound : public exception {};
+class VirusNotFound : public exception {
+	virtual const char* what() const throw()
+	{
+		return "VirusNotFound";
+	}
+};
 
-class TriedToRemoveStemVirus : public exception {};
+class TriedToRemoveStemVirus : public exception {
+	virtual const char* what() const throw()
+	{
+		return "TriedToRemoveStemVirus";
+	}
+};
 
 template<class Virus>
 class VirusGenealogy {
@@ -33,19 +48,29 @@ private:
 		typedef set<WeakPtr, std::owner_less<WeakPtr>> ParentSet;
 		typedef set<SharedPtr> ChildrenSet;	//FIXME this can be an unordered_set (see the doc, esp. the Hash function)
 
-		Virus vir;
+		Node(typename Virus::id_type const &id, VirusGenealogy *c) : vir{id}, id{id}, container{c} {} //for stem
 
-		Node(typename Virus::id_type const &id) : vir{id}, id{id} {} //for stem
-
-		Node(typename Virus::id_type const &id, WeakPtr const &parent) : vir{id}, id{id} {
+		Node(typename Virus::id_type const &id, VirusGenealogy *c, WeakPtr const &parent) : vir{id}, id{id}, container{c} {
 			parents.insert(parent);
 		}
 
-		//FIXME pass a vector?
-		Node(typename Virus::id_type const &id, ParentSet const &parent_set) : vir{id},
-			id{id}, parents{parent_set} {}
+		Node(typename Virus::id_type const &id, VirusGenealogy *c, ParentSet const &parent_set) : vir{id},
+			id{id}, container{c}, parents{std::move(parent_set)} {}
 
+		~Node(){
+			auto iter = container->nodes.find(id);
+
+			//usuwa powiązania z dziecmi
+			for(auto ptr = children.begin(); ptr != children.end(); ptr++)
+				(*ptr)->parents.erase( iter->second );
+
+			//usuwa sie z mapy
+			container->nodes.erase(iter);
+		}
+
+		Virus vir;
 		const typename Virus::id_type id;
+		VirusGenealogy *container;
 		ChildrenSet children;
 		ParentSet parents;
 	};
@@ -59,7 +84,7 @@ private:
 		auto iter = nodes.find(id);
 
 		if(iter != nodes.end())
-			if(iter->second.use_count() == 0)
+			if(iter->second.expired())
 				iter = nodes.end();
 
 		if(iter == nodes.end())
@@ -70,7 +95,7 @@ private:
 
 public:
 	//constructor
-	VirusGenealogy(typename Virus::id_type const &stem_id) : stem_id{stem_id}, stem{new Node(stem_id)} {
+	VirusGenealogy(typename Virus::id_type const &stem_id) : stem_id{stem_id}, stem{new Node(stem_id, this)} {
 		nodes.emplace(stem_id, typename Node::WeakPtr(stem));	//FIXME add strong guarantee
 	}
 
@@ -79,6 +104,7 @@ public:
 		return stem_id;
 	}
 
+	//strong guarantee
 	std::vector<typename Virus::id_type> get_children(typename Virus::id_type const &id) const {
 		auto iter = get_iterator(id);
 		vector<typename Virus::id_type> res;
@@ -88,6 +114,7 @@ public:
 		return res;
 	}
 
+	//strong guarantee
 	std::vector<typename Virus::id_type> get_parents(typename Virus::id_type const &id) const {
 		auto iter = get_iterator(id);
 		vector<typename Virus::id_type> res;
@@ -97,45 +124,79 @@ public:
 		return res;
 	}
 
+	//strong guarantee
 	void create(typename Virus::id_type const &id, std::vector<typename Virus::id_type> const &parent_ids) {
 		if(parent_ids.size() == 0)
 			throw VirusNotFound();
 
-		typename Graph::const_iterator iter;
 		typename Node::ParentSet parent_set;
-		for(auto ptr = parent_ids.begin(); ptr != parent_ids.end(); ptr++)
-			parent_set.insert(typename Node::WeakPtr( get_iterator( *ptr )->second ) );
+		for(auto ptr = parent_ids.begin(); ptr != parent_ids.end(); ptr++) {
+			try {
+				parent_set.insert(typename Node::WeakPtr( get_iterator( *ptr )->second ) );
+			}
+			catch (exception& e) {
+				throw VirusAlreadyCreated();
+			}
+		}
+			
 
-		typename Node::SharedPtr sp( new Node(id, parent_set) );
-		for(auto ptr = parent_set.begin(); ptr != parent_set.end(); ptr++)
+		typename Node::SharedPtr sp( new Node(id, this, parent_set) );
+		for(auto ptr = sp->parents.begin(); ptr != sp->parents.end(); ptr++)
 			ptr->lock()->children.insert(typename Node::SharedPtr(sp));
 
 		nodes.emplace(id, typename Node::WeakPtr(sp));
 	}
 
-	//TODO try & catch on get_iterator here
+	//no-throw guarantee
 	bool exists(typename Virus::id_type const &id) const {
-		return get_iterator(id) != nodes.end();
+		auto k = nodes.end();
+		try{ k = get_iterator(id); }
+		catch (exception& e){}
+		return k != nodes.end();
 	}
 
+	//strong guarantee
 	void create(typename Virus::id_type const &id, typename Virus::id_type const &parent_id) {
-		auto iter = get_iterator(parent_id);
-		typename Node::SharedPtr sp( new Node(id, iter->second ));
+		typename Graph::const_iterator iter;
+		try {
+			iter = get_iterator(parent_id);
+		}
+		catch (exception& e) {
+			throw VirusAlreadyCreated();
+		}
+		typename Node::SharedPtr sp( new Node(id, this, iter->second ));
 		nodes.emplace(id, typename Node::WeakPtr(sp));
 		iter->second.lock()->children.insert(sp);
 	}
 
+	//strong guarantee
 	void connect(typename Virus::id_type const &child_id, typename Virus::id_type const &parent_id) {
 		auto parent = get_iterator(parent_id), child = get_iterator(child_id);
 		parent->second.lock()->children.insert( typename Node::SharedPtr( child->second ) );
 		child->second.lock()->parents.insert( typename Node::WeakPtr( parent->second ) );
 	}
 
-	//TODO sluzy do debugu, usunac na koncu
-	int get_usage(typename Virus::id_type const &id) {
+	//guarantee?
+	void remove(typename Virus::id_type const &id) {
 		auto iter = get_iterator(id);
-		return iter->second.use_count();
+		//sprawdzamy czy nie stem
+		if (iter->first == stem_id) throw TriedToRemoveStemVirus();
+
+		typename Node::SharedPtr sp(iter->second);
+
+		//usuwa powiązania z rodzicami
+		
+		for(auto ptr = iter->second.lock()->parents.begin(); ptr != iter->second.lock()->parents.end(); ptr++)
+			(*ptr).lock()->children.erase( sp );
+
+		//z mapy usunie sie sam, destruktorem Node :)
 	}
+
+	Virus& operator[](typename Virus::id_type const &id)
+	{
+		return get_iterator(id)->second.lock()->vir;
+	}
+	
 };
 
 #endif
