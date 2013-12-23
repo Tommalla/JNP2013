@@ -14,21 +14,24 @@ using std::weak_ptr;
 using std::vector;
 
 class VirusAlreadyCreated : public exception {
-	virtual const char* what() const throw()
+public:
+	virtual const char* what() const noexcept
 	{
 		return "VirusAlreadyCreated";
 	}
 };
 
 class VirusNotFound : public exception {
-	virtual const char* what() const throw()
+public:
+	virtual const char* what() const noexcept
 	{
 		return "VirusNotFound";
 	}
 };
 
 class TriedToRemoveStemVirus : public exception {
-	virtual const char* what() const throw()
+public:
+	virtual const char* what() const noexcept
 	{
 		return "TriedToRemoveStemVirus";
 	}
@@ -45,7 +48,7 @@ private:
 		typedef weak_ptr<Node> WeakPtr;
 		typedef shared_ptr<Node> SharedPtr;
 		typedef set<WeakPtr, std::owner_less<WeakPtr>> ParentSet;
-		typedef set<SharedPtr> ChildrenSet;	//FIXME this can be an unordered_set (see the doc, esp. the Hash function)
+		typedef set<SharedPtr> ChildrenSet;
 
 		Node(typename Virus::id_type const &id, VirusGenealogy *c) : vir{id}, id{id}, container{c} {} //for stem
 
@@ -53,7 +56,7 @@ private:
 			parents.insert(parent);
 		}
 
-		Node(typename Virus::id_type const &id, VirusGenealogy *c, ParentSet const &parent_set) : vir{id},
+		Node(typename Virus::id_type const &id, VirusGenealogy *c, ParentSet &parent_set) : vir{id},
 			id{id}, container{c}, parents{std::move(parent_set)} {}
 
 		~Node(){
@@ -165,7 +168,7 @@ public:
 
 	void remove(typename Virus::id_type const &id) {
 		auto iter = get_iterator(id);
-		if (iter->first == stem_id) 
+		if (iter->first == stem_id)
 			throw TriedToRemoveStemVirus();
 
 		typename Node::SharedPtr sp(iter->second);
@@ -178,7 +181,7 @@ public:
 	Virus& operator[](typename Virus::id_type const &id) const {
 		return get_iterator(id)->second.lock()->vir;
 	}
-	
+
 };
 
 #endif
