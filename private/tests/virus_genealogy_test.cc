@@ -4,7 +4,7 @@
 
 #if TEST_NUM <= 199
 
-#include "virus_genealogy.h"
+#include "../../virus_genealogy.h"
 #include <cassert>
 #include <iostream>
 #include <string>
@@ -24,7 +24,7 @@ class Virus {
 
 #elif TEST_NUM <= 699
 
-#include "virus_genealogy.h"
+#include "../../virus_genealogy.h"
 #include <cassert>
 #include <exception>
 
@@ -468,7 +468,7 @@ void AdvancedTest(VirusGenealogy<Virus>& graph) {
 
 #else
 
-#include "virus_genealogy.h"
+#include "../../virus_genealogy.h"
 #include <cassert>
 #include <exception>
 
@@ -781,8 +781,8 @@ int main() {
   // Test, czy jest header guard.
 
   #if TEST_NUM == 700
-  #include "virus_genealogy.h"
-  #include "virus_genealogy.h"
+  #include "../../virus_genealogy.h"
+  #include "../../virus_genealogy.h"
   #endif
 
   // Testy, czy wyjątki dziedziczą po std::exception.
