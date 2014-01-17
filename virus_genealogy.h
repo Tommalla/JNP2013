@@ -50,13 +50,13 @@ private:
 		typedef set<WeakPtr, std::owner_less<WeakPtr>> ParentSet;
 		typedef set<SharedPtr> ChildrenSet;
 
-		Node(typename Virus::id_type const &id, VirusGenealogy *c) : vir{id}, id{id}, container{c} {} //for stem
+		Node(typename Virus::id_type const &id, VirusGenealogy *c) noexcept : vir{id}, id{id}, container{c} {} //for stem
 
-		Node(typename Virus::id_type const &id, VirusGenealogy *c, WeakPtr const &parent) : vir{id}, id{id}, container{c} {
+		Node(typename Virus::id_type const &id, VirusGenealogy *c, WeakPtr const &parent) noexcept : vir{id}, id{id}, container{c} {
 			parents.insert(parent);
 		}
 
-		Node(typename Virus::id_type const &id, VirusGenealogy *c, ParentSet &parent_set) : vir{id},
+		Node(typename Virus::id_type const &id, VirusGenealogy *c, ParentSet &parent_set) noexcept : vir{id},
 			id{id}, container{c}, parents{std::move(parent_set)} {}
 
 		~Node() noexcept {
@@ -98,7 +98,7 @@ private:
 public:
 	//constructor
 	VirusGenealogy(typename Virus::id_type const &stem_id) : stem_id{stem_id}, stem{new Node(stem_id, this)} {
-		nodes.emplace(stem_id, typename Node::WeakPtr(stem));	//FIXME add strong guarantee
+		nodes.emplace(stem_id, typename Node::WeakPtr(stem));
 	}
 
 	//getters
