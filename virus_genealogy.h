@@ -7,14 +7,14 @@
 #include <vector>
 #include <cstdio>
 
-using std::exception;
+//using std::exception;
 using std::map;
 using std::set;
 using std::shared_ptr;
 using std::weak_ptr;
 using std::vector;
 
-class VirusAlreadyCreated : public exception {
+class VirusAlreadyCreated : public std::exception {
 public:
 	virtual const char* what() const noexcept
 	{
@@ -22,7 +22,7 @@ public:
 	}
 };
 
-class VirusNotFound : public exception {
+class VirusNotFound : public std::exception {
 public:
 	virtual const char* what() const noexcept
 	{
@@ -30,7 +30,7 @@ public:
 	}
 };
 
-class TriedToRemoveStemVirus : public exception {
+class TriedToRemoveStemVirus : public std::exception {
 public:
 	virtual const char* what() const noexcept
 	{
@@ -51,13 +51,13 @@ private:
 		typedef set<WeakPtr, std::owner_less<WeakPtr>> ParentSet;
 		typedef set<SharedPtr> ChildrenSet;
 
-		Node(typename Virus::id_type const &id, VirusGenealogy *c) noexcept : vir{id}, id{id}, container{c} {} //for stem
+		Node(typename Virus::id_type const &id, VirusGenealogy *c) : vir{id}, id{id}, container{c} {} //for stem
 
-		Node(typename Virus::id_type const &id, VirusGenealogy *c, WeakPtr const &parent) noexcept : vir{id}, id{id}, container{c} {
+		Node(typename Virus::id_type const &id, VirusGenealogy *c, WeakPtr const &parent) : vir{id}, id{id}, container{c} {
 			parents.insert(parent);
 		}
 
-		Node(typename Virus::id_type const &id, VirusGenealogy *c, ParentSet &parent_set) noexcept : vir{id},
+		Node(typename Virus::id_type const &id, VirusGenealogy *c, ParentSet &parent_set) : vir{id},
 			id{id}, container{c}, parents{std::move(parent_set)} {}
 
 		Virus vir;
@@ -72,12 +72,11 @@ private:
 	Graph nodes;
 	typename Node::SharedPtr stem;
 
- 	typename Graph::const_iterator get_iterator(typename Virus::id_type const &id) const {
+	typename Graph::const_iterator get_iterator(typename Virus::id_type const &id) const {
 		auto iter = nodes.find(id);
 
-		if(iter != nodes.end())
-			if(iter->second.expired())
-				iter = nodes.end();
+		if(iter != nodes.end() && iter->second.expired())
+			iter = nodes.end();
 
 		if(iter == nodes.end())
 			throw VirusNotFound();
@@ -88,11 +87,13 @@ private:
 public:
 	//constructor
 	VirusGenealogy(typename Virus::id_type const &stem_id) {
-        try {
-            this->stem_id = stem_id;
-            stem = typename Node::SharedPtr(new Node(stem_id, this));
-            nodes.emplace(stem_id, typename Node::WeakPtr(stem));
-        } catch (exception &e) {}
+		this->stem_id = stem_id;
+
+		try {
+			stem = typename Node::SharedPtr(new Node(stem_id, this));
+		} catch (...) {return;}
+
+		nodes.emplace(stem_id, typename Node::WeakPtr(stem));
 	}
 
 	//getters
@@ -113,8 +114,8 @@ public:
 		auto iter = get_iterator(id);
 		vector<typename Virus::id_type> res;
 		for (auto const &ptr: iter->second.lock()->parents)
-            if (!ptr.expired())
-                res.push_back(ptr.lock()->id);
+			if (!ptr.expired())
+				res.push_back(ptr.lock()->id);
 
 		return res;
 	}
@@ -124,13 +125,14 @@ public:
 			throw VirusAlreadyCreated();
 		auto iter = get_iterator(parent_id);
 
-        try {
-            puts("A");
-            typename Node::SharedPtr sp( new Node(id, this, iter->second ));
-            puts("B");
-            nodes.emplace(id, typename Node::WeakPtr(sp));
-            iter->second.lock()->children.insert(sp);
-        } catch(exception e) {puts("W00t?!");}    //ignore it - there's nothing we can do if we cannot create Virus
+		typename Node::SharedPtr sp;
+
+		try {
+			sp = typename Node::SharedPtr( new Node(id, this, iter->second ));
+		} catch(...) {}    //ignore it - there's nothing we can do if we cannot create Virus
+
+		nodes.emplace(id, typename Node::WeakPtr(sp));
+		iter->second.lock()->children.insert(sp);
 	}
 
 	void create(typename Virus::id_type const &id, std::vector<typename Virus::id_type> const &parent_ids) {
@@ -139,18 +141,22 @@ public:
 
 		if (exists(id))
 			throw VirusAlreadyCreated();
-        try {
 
-		typename Node::ParentSet parent_set;
-		for(auto ptr = parent_ids.begin(); ptr != parent_ids.end(); ptr++)
-			parent_set.insert(typename Node::WeakPtr( get_iterator( *ptr )->second ));
+		typename Node::SharedPtr sp;
 
-            typename Node::SharedPtr sp( new Node(id, this, parent_set) );
-            for(auto ptr = sp->parents.begin(); ptr != sp->parents.end(); ptr++)
-                ptr->lock()->children.insert(typename Node::SharedPtr(sp));
+		//try {
 
-            nodes.emplace(id, typename Node::WeakPtr(sp));
-        } catch (...) {}   //ignore it - there's nothing we can do
+			typename Node::ParentSet parent_set;
+			for(auto ptr = parent_ids.begin(); ptr != parent_ids.end(); ptr++)
+				parent_set.insert(typename Node::WeakPtr( get_iterator( *ptr )->second ));
+
+			sp = typename Node::SharedPtr( new Node(id, this, parent_set) );
+			for(auto ptr = sp->parents.begin(); ptr != sp->parents.end(); ptr++)
+				ptr->lock()->children.insert(typename Node::SharedPtr(sp));
+
+		//} catch (...) {}   //ignore it - there's nothing we can do
+
+		nodes.emplace(id, typename Node::WeakPtr(sp));
 	}
 
 	bool exists(typename Virus::id_type const &id) const {
