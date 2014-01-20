@@ -86,13 +86,10 @@ private:
 
 public:
 	//constructor
+	//FIXME przywroc const na stemid
 	VirusGenealogy(typename Virus::id_type const &stem_id) {
 		this->stem_id = stem_id;
-
-		try {
-			stem = typename Node::SharedPtr(new Node(stem_id, this));
-		} catch (...) {return;}
-
+		stem = typename Node::SharedPtr(new Node(stem_id, this));
 		nodes.emplace(stem_id, typename Node::WeakPtr(stem));
 	}
 
@@ -127,10 +124,10 @@ public:
 
 		typename Node::SharedPtr sp;
 
-		try {
-			sp = typename Node::SharedPtr( new Node(id, this, iter->second ));
-		} catch(...) {}    //ignore it - there's nothing we can do if we cannot create Virus
-
+		//try{
+		sp = typename Node::SharedPtr( new Node(id, this, iter->second ));
+		//} catch(&exception e){
+		//}
 		nodes.emplace(id, typename Node::WeakPtr(sp));
 		iter->second.lock()->children.insert(sp);
 	}
@@ -151,12 +148,14 @@ public:
 				parent_set.insert(typename Node::WeakPtr( get_iterator( *ptr )->second ));
 
 			sp = typename Node::SharedPtr( new Node(id, this, parent_set) );
-			for(auto ptr = sp->parents.begin(); ptr != sp->parents.end(); ptr++)
-				ptr->lock()->children.insert(typename Node::SharedPtr(sp));
+			
 
 		//} catch (...) {}   //ignore it - there's nothing we can do
 
 		nodes.emplace(id, typename Node::WeakPtr(sp));
+		
+		for(auto ptr = sp->parents.begin(); ptr != sp->parents.end(); ptr++)
+				ptr->lock()->children.insert(typename Node::SharedPtr(sp));
 	}
 
 	bool exists(typename Virus::id_type const &id) const {
