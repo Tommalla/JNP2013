@@ -19,8 +19,9 @@ void MojaGrubaRyba::setDie(std::shared_ptr< Die > die) {
 }
 
 void MojaGrubaRyba::addComputerPlayer(GrubaRyba::ComputerLevel level) {
-	//FIXME
-	//Dodac wyjatek toomanyplayers
+	if (players.size() + 1 > maxNoPlayers)
+		throw TooManyPlayersException(maxNoPlayers);
+
 	shared_ptr<Player> player;
 	ostringstream convert;
 	string name;
@@ -39,8 +40,9 @@ void MojaGrubaRyba::addComputerPlayer(GrubaRyba::ComputerLevel level) {
 }
 
 void MojaGrubaRyba::addHumanPlayer(std::shared_ptr< Human > human) {
-	//FIXME
-	//Dodac wyjatek toomanyplayers
+	if (players.size() + 1 > maxNoPlayers)
+		throw TooManyPlayersException(maxNoPlayers);
+
 	shared_ptr<Player> player = shared_ptr<Player>(new HumanPlayer(1000, board->getInitialPosition(), human));
 	players.push_back(player);
 }

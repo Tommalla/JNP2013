@@ -98,6 +98,7 @@ private:
 	//przywróć planszę do stanu początkowego
 	void reset();
 
+	const size_t maxNoPlayers = 8;
 	shared_ptr<Die> die;
 	shared_ptr<Die> dieCopy;
 	vector<shared_ptr<Player>> players;
@@ -199,7 +200,7 @@ public:
 	string const& getName() const;
 
 private:
-	shared_ptr <Human> human;
+	shared_ptr<Human> human;
 };
 
 class ComputerPlayer : public Player {
