@@ -325,6 +325,7 @@ private:
 
 
 class AquariumField : public NotOwnedField {
+public:
 	AquariumField(const string& name, unsigned int rounds);
 
 	virtual effectPtr stop();
@@ -361,8 +362,10 @@ public:
 };
 
 class IslandField : public NotOwnedField {
-	public:
-		virtual effectPtr stop();
+public:
+	IslandField(const string& name);	
+		
+	virtual effectPtr stop();
 };
 
 #endif

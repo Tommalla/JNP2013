@@ -158,9 +158,18 @@ void MojaGrubaRyba::reset() {
 // Board --------------------------------------------------------------------------------
 
 Board::Board(MojaGrubaRyba* gameMaster) : gameMaster{gameMaster} {
-	//TODO
 	fields.push_back(shared_ptr<Field>(new StartField("Start", 50)));
-// 	fields.push_back(shared_ptr<Field>)
+	fields.push_back(shared_ptr<Field>(new CoralField("Anemonia", 160)));
+	fields.push_back(shared_ptr<Field>(new IslandField("Wyspa")));
+	fields.push_back(shared_ptr<Field>(new CoralField("Aporina", 220)));
+	fields.push_back(shared_ptr<Field>(new AquariumField("Akwarium", 3)));
+	fields.push_back(shared_ptr<Field>(new PublicPropertyField("Grota", 300)));
+	fields.push_back(shared_ptr<Field>(new CoralField("Menella", 280)));
+	fields.push_back(shared_ptr<Field>(new DepositField("Laguna", 15)));
+	fields.push_back(shared_ptr<Field>(new PublicPropertyField("Statek", 250)));
+	fields.push_back(shared_ptr<Field>(new AwardField("Blazenki", 120)));
+	fields.push_back(shared_ptr<Field>(new CoralField("Pennatula", 400)));
+	fields.push_back(shared_ptr<Field>(new PenaltyField("Rekin", 180)));
 }
 
 MoveResult Board::makeMove(const PlayerId& id, const BoardPosition& pos, unsigned int steps) {
@@ -513,6 +522,10 @@ effectPtr CoralField::stop() {
 	effectPtr ptr(new EffectInfo(amount, 0));
 	return ptr;
 }
+
+IslandField::IslandField(const string& name)
+	: NotOwnedField(name) {}
+
 
 effectPtr IslandField::stop() {
 	return effectPtr(new EffectInfo(0, 0));
