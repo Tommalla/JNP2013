@@ -98,6 +98,7 @@ private:
 	//przywróć planszę do stanu początkowego
 	void reset();
 
+	const size_t minNoPlayers = 2;
 	const size_t maxNoPlayers = 8;
 	shared_ptr<Die> die;
 	shared_ptr<Die> dieCopy;
@@ -365,8 +366,8 @@ public:
 
 class IslandField : public NotOwnedField {
 public:
-	IslandField(const string& name);	
-		
+	IslandField(const string& name);
+
 	virtual effectPtr stop();
 };
 

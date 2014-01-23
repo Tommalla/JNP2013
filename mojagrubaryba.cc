@@ -17,7 +17,6 @@ MojaGrubaRyba::MojaGrubaRyba() {
 	board = unique_ptr<Board>(new Board(this));
 }
 
-
 void MojaGrubaRyba::setDie(std::shared_ptr< Die > die) {
 	this->dieCopy = die;
 }
@@ -52,6 +51,9 @@ void MojaGrubaRyba::addHumanPlayer(std::shared_ptr< Human > human) {
 }
 
 void MojaGrubaRyba::play(unsigned int rounds) {
+	if (playersCopy.size() < minNoPlayers)
+		throw TooFewPlayersException(minNoPlayers);
+	
 	reset();
 	
 	int counter = 1;
