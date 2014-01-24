@@ -161,9 +161,6 @@ public:
 	Player(Player &&other);
 	virtual ~Player(){}
 
-	virtual void clone(const Player& other);
-	virtual void move(Player &&other);
-
 	// Zwraca imię gracza
 	virtual std::string const& getName() const = 0;
 
@@ -173,6 +170,9 @@ public:
 	// Zwraca true, jeśli gracz chce sprzedać daną posiadłość.
 	// Wywoływane w przypadku, gdy brakuje graczowi pieniędzy na zakup lub opłaty.
 	virtual bool wantSell(std::string const& propertyName) = 0;
+
+	bool isActive() const;
+	void deactivate();
 
 	void wait(unsigned int roundsToWait);
 	bool isWaiting();
@@ -190,7 +190,14 @@ public:
 	//przez kopię, bo może się zmieniać
 	vector<BoardPosition> getProperties() const;
 	void addProperty(const BoardPosition& pos);
+
+protected:
+	virtual void clone(const Player& other);
+	virtual void move(Player &&other);
+
 private:
+
+	bool active;
 	unsigned int roundsToWait;
 	Money money;
 	BoardPosition position;
@@ -202,12 +209,13 @@ class HumanPlayer : public Player {
 public:
 	HumanPlayer(const Money& money, const BoardPosition& pos, shared_ptr< Human >& human);
 
-	virtual void clone(const HumanPlayer& other);
-	virtual void move(HumanPlayer&& other);
-
 	virtual bool wantBuy(string const& propertyName);
 	virtual bool wantSell(string const& propertyName);
 	string const& getName() const;
+
+protected:
+	virtual void clone(const HumanPlayer& other);
+	virtual void move(HumanPlayer&& other);
 
 private:
 	shared_ptr<Human> human;

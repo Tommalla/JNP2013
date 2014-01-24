@@ -1,10 +1,12 @@
 /* Tomasz Zakrzewski (tz336079) i Andrzej Białokozowicz (ab333903)
  * JNP1 2013/2014, Zadanie 6
  */
-#include "mojagrubaryba.h"
 #include <sstream>
 #include <iostream>
 #include <cstdio>
+#include <cassert>
+
+#include "mojagrubaryba.h"
 
 using std::ostringstream;
 using std::printf;
@@ -61,19 +63,18 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 		printf("Runda: %d\n", counter);
 		counter++;
 		for (PlayerId id = getFirstPlayer(); id != getWatchdogPlayer(); id = getNextPlayerId(id)) {
-// 			printf("%s ", players.at(id)->getName());
-			cout<<players.at(id)->getName()<<" ";
-			if (players.at(id)) {	//jeśli jeszcze gra
-				if (players.at(id)->isWaiting()) {
-					printf("pole: Akwarium *** czekanie: %d ***\n", players.at(id)->getRoundsToWait());
+			auto p = players.at(id);
+			assert(p);
+			cout << p->getName() << " ";
+			if (p->isActive()) {	//jeśli jeszcze gra
+				if (p->isWaiting()) {
+					printf("pole: Akwarium *** czekanie: %d ***\n", p->getRoundsToWait());
 					continue;
 				}
 				unsigned int steps = rollDies();
 				auto moveRes = board->makeMove(id, players.at(id)->getPosition(), steps);
-// 				cout<<players.at(id)->getMoney()<<" ";
-				shared_ptr<Player> p;
 
-				if (p = players.at(id)) {	//jeśli gracz po turze dalej jest w grze
+				if (p->isActive()) {	//jeśli gracz po turze dalej jest w grze
 					p->setPosition(moveRes.first);
 					unsigned int rounds;
 // 					printf("pole: %s", board->getFieldName(moveRes.first));
@@ -99,15 +100,11 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 							board->own(id, moveRes.first);
 						}
 					}
-					printf(" gotowka %d\n",p->getMoney());
+					cout << " gotowka " << p->getMoney() << "\n";
 				}
-				else {
-					printf("*** bankrut ***\n");
-				}
+				else cout << "*** bankrut ***\n";
 			}
-			else {
-				printf("*** bankrut ***\n");
-			}
+			else cout << "*** bankrut ***\n";
 		}
 	}
 }
@@ -149,7 +146,7 @@ unsigned int MojaGrubaRyba::rollDies() {
 
 Money MojaGrubaRyba::makeBankrupt(shared_ptr< Player >& p){
 	Money res = sellPropertiesOf(p);
-	p = nullptr;	//usuwamy playera
+	p->deactivate();	//usuwamy playera
 	return res;
 }
 
@@ -292,7 +289,8 @@ BoardPosition Board::getBoardSize() const {
 // Player -------------------------------------------------------------------------------
 
 Player::Player(const Money& money, const BoardPosition& position)
-	: roundsToWait(0)
+	: active{true}
+	, roundsToWait(0)
 	, money{money}
 	, position{position} {}
 
@@ -305,6 +303,7 @@ Player::Player(Player&& other) {
 }
 
 void Player::clone(const Player& other) {
+	active = other.active;
 	money = other.money;
 	roundsToWait = other.roundsToWait;
 	position = other.position;
@@ -312,10 +311,19 @@ void Player::clone(const Player& other) {
 }
 
 void Player::move(Player&& other) {
+	active = std::move(other.active);
 	money = std::move(other.money);
 	roundsToWait = std::move(other.roundsToWait);
 	position = std::move(other.position);
 	properties = std::move(other.properties);
+}
+
+bool Player::isActive() const {
+	return active;
+}
+
+void Player::deactivate() {
+	active = false;
 }
 
 void Player::wait(unsigned int roundsToWait) {
