@@ -75,10 +75,8 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 				if (p->isActive()) {	//jeśli gracz po turze dalej jest w grze
 					p->setPosition(moveRes.first);
 					unsigned int rounds;
-					if ((rounds = moveRes.second->roundsToWait) > 0) {
+					if ((rounds = moveRes.second->roundsToWait) > 0)
 						p->wait(rounds);
-						continue;
-					}
 					else if (board->canBeBought(moveRes.first)) {
 						auto name = board->getFieldName(moveRes.first);
 						auto cost = board->getBuyValue(moveRes.first);
@@ -133,7 +131,7 @@ void MojaGrubaRyba::printState() const {
 			if (p->getRoundsToWait() > 0)
 				printf("pole: Akwarium *** czekanie: %d ***\n", p->getRoundsToWait());
 			else {
-				printf("pole: %s gotówka: %d\n", board->getFieldName(p->getPosition()).c_str(), p->getMoney());
+				printf("pole: %s gotowka: %d\n", board->getFieldName(p->getPosition()).c_str(), p->getMoney());
 			}
 		} else puts("*** bankrut ***");
 	}
@@ -240,7 +238,7 @@ MoveResult Board::makeMove(const PlayerId& id, const BoardPosition& pos, unsigne
 }
 
 bool Board::canBeBought(const BoardPosition& pos) {
-	return !getFieldAt(pos)->isOwned();
+	return getFieldAt(pos)->canBeBought() && !getFieldAt(pos)->isOwned();
 }
 
 string Board::getFieldName(const BoardPosition& pos) {
@@ -461,6 +459,10 @@ const PlayerId Field::getOwner() const {
 	return ownerId;
 }
 
+bool Field::canBeBought() {
+	return !isOwned();
+}
+
 bool Field::isOwned() {
 	return owned;
 }
@@ -489,6 +491,11 @@ NotOwnedField::~NotOwnedField() {
 bool NotOwnedField::isOwned() {
 	return false;
 }
+
+bool NotOwnedField::canBeBought() {
+	return false;
+}
+
 
 // Koniec (NotOwnedField) ---------------------------------------------------------------
 // StartField ---------------------------------------------------------------------------

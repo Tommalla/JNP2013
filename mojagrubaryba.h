@@ -269,6 +269,7 @@ public:
 	virtual effectPtr pass();
 	virtual effectPtr stop() = 0;
 	virtual bool isOwned();
+	virtual bool canBeBought();
 	virtual void store(Money amount);
 
 	const PlayerId getOwner() const;
@@ -294,7 +295,8 @@ public:
 	virtual ~NotOwnedField();
 
 	virtual effectPtr stop() = 0;
-	bool isOwned();
+	virtual bool isOwned();
+	virtual bool canBeBought();
 };
 
 
