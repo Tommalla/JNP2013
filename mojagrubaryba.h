@@ -6,19 +6,10 @@
 
 #include <cstdio>
 #include <vector>
-#include <list>
 #include <string>
-#include <exception>
+#include <memory>
 
 #include "grubaryba.h"
-
-using std::vector;
-using std::list;
-using std::shared_ptr;
-using std::max;
-using std::unique_ptr;
-using std::pair;
-using std::string;
 
 class Board;
 class Player;
@@ -27,11 +18,11 @@ struct EffectInfo;
 typedef size_t PlayerId;
 typedef size_t BoardPosition;
 typedef int Money;
-typedef pair<BoardPosition, shared_ptr<EffectInfo>> MoveResult;
-typedef shared_ptr <EffectInfo> effectPtr;
+typedef std::pair<BoardPosition, std::shared_ptr<EffectInfo>> MoveResult;
+typedef std::shared_ptr <EffectInfo> effectPtr;
 
 //wyjątek rzucany, jeśli czyjaś implementacja, używając naszych klas,
-//
+//naruszy kontrakty wystawiane przez nie
 class IllegalOperationException : public std::exception {
 public:
 	IllegalOperationException() {}
@@ -56,9 +47,9 @@ class MojaGrubaRyba : public GrubaRyba {
 public:
 	MojaGrubaRyba();
 
-	virtual void setDie(shared_ptr<Die> die);
+	virtual void setDie(std::shared_ptr<Die> die);
 	virtual void addComputerPlayer(ComputerLevel level);
-	virtual void addHumanPlayer(shared_ptr<Human> human);
+	virtual void addHumanPlayer(std::shared_ptr<Human> human);
 	virtual void play(unsigned int rounds);
 
 	//Dwie poniższe metody służą do transferu pieniędzy między graczami/zabierania pieniędzy graczowi.
@@ -80,14 +71,14 @@ private:
 
 	//Gracz p bankrutuje.
 	//Metoda zwraca ilość pieniędzy odzyskanych od niego ze sprzedawania nieruchomości
-	Money makeBankrupt(shared_ptr<Player>& p);
+	Money makeBankrupt(std::shared_ptr<Player>& p);
 
 	//Pyta gracza o każdą z jego nieruchomości i próbuje je sprzedać.
 	//Zwraca ilość uzbieranych pieniędzy.
-	Money sellPropertiesOf(shared_ptr< Player >& p);
+	Money sellPropertiesOf(std::shared_ptr< Player >& p);
 
-	//Zwraca shared_ptr na gracza o danym id
-	shared_ptr<Player> getPlayerAt(const PlayerId& id) const;
+	//Zwraca std::shared_ptr na gracza o danym id
+	std::shared_ptr<Player> getPlayerAt(const PlayerId& id) const;
 
 	//nie-const, bo nie wiadomo jak ktoś kiedyś chce trzymać playerów
 	//może np. chcieć coś sobie przetwarzać przed zwróceniem pierwszego
@@ -103,13 +94,13 @@ private:
 
 	const size_t minNoPlayers = 2;
 	const size_t maxNoPlayers = 8;
-	shared_ptr<Die> die;
-	shared_ptr<Die> dieCopy;
-	vector<shared_ptr<Player>> players;
+	std::shared_ptr<Die> die;
+	std::shared_ptr<Die> dieCopy;
+	std::vector<std::shared_ptr<Player>> players;
 	//przechowuje kopię playerów z oryginalnymi wartościami
 	//na potrzeby gry od nowa
-	vector<shared_ptr<Player>> playersCopy;
-	unique_ptr<Board> board;
+	std::vector<std::shared_ptr<Player>> playersCopy;
+	std::unique_ptr<Board> board;
 };
 
 
@@ -120,18 +111,17 @@ public:
 	//Wykonuje ruch z perspektywy planszy - nie ma dostępu do playera, wie tylko że jakiś obiekt
 	//identyfikowalny przez od chce wykonać ruch ze swojej obecnej pozycji pos o steps pól do przodu.
 	//Możliwość wykonania każdego ruchu będzie walidowana w MojejGrubejRybie.
-	//FIXME tu jest zaszyta logika tego co się dzieje w grze,  więc i możliwości.
+	//Tu jest zaszyta logika tego co się dzieje w grze,  więc i możliwości.
 	//W związku z tym ta klasa powinna mieć część metod (włącznie z tą) wirtualnych oraz
 	//wirtualny destruktor, bo ktoś chcący dodać nowe rodzaje pól z nieznanymi wcześniej efektami, będzie musiał przedefiniować
 	//tę metodę, żeby te pola działały
-	MoveResult makeMove(const PlayerId &id, const BoardPosition& pos, unsigned int steps);
-
+	virtual MoveResult makeMove(const PlayerId &id, const BoardPosition& pos, unsigned int steps);
 
 	virtual bool canBeBought(const BoardPosition &pos);
 
-	string getFieldName(const BoardPosition &pos);
-	Money getSellValue(const BoardPosition &pos);
-	Money getBuyValue(const BoardPosition &pos);
+	std::string getFieldName(const BoardPosition &pos);
+	virtual Money getSellValue(const BoardPosition &pos);
+	virtual Money getBuyValue(const BoardPosition &pos);
 
 	//Przypisuje pole na pozycji pos graczowi id
 	void own(const PlayerId &id, const BoardPosition &pos);
@@ -149,11 +139,11 @@ private:
 	//Metoda zwracająca rozmiar planszy (abstrakcja wokół std::vector)
 	BoardPosition getBoardSize() const;
 
-	shared_ptr<Field> getFieldAt(const BoardPosition& pos) const;
+	std::shared_ptr<Field> getFieldAt(const BoardPosition& pos) const;
 
 	MojaGrubaRyba* gameMaster;
 
-	vector<shared_ptr <Field> >fields;
+	std::vector<std::shared_ptr <Field> >fields;
 };
 
 
@@ -178,7 +168,7 @@ public:
 	void deactivate();
 
 	void wait(unsigned int roundsToWait);
-	bool isWaiting();
+	virtual bool isWaiting();
 	unsigned int getRoundsToWait() const;
 
 	//Ustawia stan konta gracza na sum. Nielegalnym jest ustawianie konta na ujemną
@@ -191,11 +181,11 @@ public:
 	void setPosition(const BoardPosition& pos);
 
 	//przez kopię, bo może się zmieniać
-	vector<BoardPosition> getProperties() const;
+	std::vector<BoardPosition> getProperties() const;
 	void addProperty(const BoardPosition& pos);
 
 protected:
-	virtual void clone(const Player& other);
+	virtual void clone(const Player &other);
 	virtual void move(Player &&other);
 
 private:
@@ -204,66 +194,65 @@ private:
 	unsigned int roundsToWait;
 	Money money;
 	BoardPosition position;
-	vector<BoardPosition> properties;
+	std::vector<BoardPosition> properties;
 };
 
+
 class HumanPlayer : public Player {
-
 public:
-	HumanPlayer(const Money& money, const BoardPosition& pos, shared_ptr< Human >& human);
+	HumanPlayer(const Money &money, const BoardPosition &pos, std::shared_ptr<Human> &human);
 
-	virtual bool wantBuy(string const& propertyName);
-	virtual bool wantSell(string const& propertyName);
-	string const& getName() const;
+	virtual bool wantBuy(std::string const &propertyName);
+	virtual bool wantSell(std::string const &propertyName);
+	std::string const& getName() const;
 
 protected:
 	virtual void clone(const HumanPlayer& other);
 	virtual void move(HumanPlayer&& other);
 
 private:
-	shared_ptr<Human> human;
+	std::shared_ptr<Human> human;
 };
+
 
 class ComputerPlayer : public Player {
-
 public:
-	ComputerPlayer(const Money& money, const BoardPosition& pos, const string& name);
+	ComputerPlayer(const Money& money, const BoardPosition& pos, const std::string& name);
 
-	virtual bool wantBuy(string const& propertyName) = 0;
-	virtual bool wantSell(string const& propertyName) = 0;
-	string const& getName() const;
+	virtual bool wantBuy(std::string const& propertyName) = 0;
+	virtual bool wantSell(std::string const& propertyName) = 0;
+	std::string const& getName() const;
 
 private:
-	string name;
+	std::string name;
 };
 
-class DumbComputerPlayer : public ComputerPlayer
-{
-public:
-	DumbComputerPlayer(const Money& money, const BoardPosition& pos, const string& name);
 
-	virtual bool wantBuy(string const& propertyName);
-	virtual bool wantSell(string const& propertyName);
+class DumbComputerPlayer : public ComputerPlayer {
+public:
+	DumbComputerPlayer(const Money& money, const BoardPosition& pos, const std::string& name);
+
+	virtual bool wantBuy(std::string const& propertyName);
+	virtual bool wantSell(std::string const& propertyName);
 
 private:
 	int counter;
 };
 
 
-class SmartComputerPlayer : public ComputerPlayer
-{
+class SmartComputerPlayer : public ComputerPlayer {
 public:
 
-	SmartComputerPlayer(const Money& money, const BoardPosition& pos, const string& name);
+	SmartComputerPlayer(const Money& money, const BoardPosition& pos, const std::string& name);
 
-	virtual bool wantBuy(string const& propertyName);
-	virtual bool wantSell(string const& propertyName);
+	virtual bool wantBuy(std::string const& propertyName);
+	virtual bool wantSell(std::string const& propertyName);
 };
 
 
 class Field {
 public:
-	Field(const string& name, const Money cost);
+	Field(const std::string& name, const Money cost);
 	virtual ~Field();
 
 	virtual effectPtr pass();
@@ -274,14 +263,14 @@ public:
 
 	const PlayerId getOwner() const;
 	const Money getCost() const;
-	const string& getName() const;
+	const std::string& getName() const;
 
 	void setOwner(const PlayerId& ownerId);
 	void removeOwner();
 
 private:
 	PlayerId ownerId;
-	string name;
+	std::string name;
 	bool owned;
 
 protected:
@@ -291,7 +280,7 @@ protected:
 
 class NotOwnedField : public Field {
 public:
-	NotOwnedField(const string& name);
+	NotOwnedField(const std::string& name);
 	virtual ~NotOwnedField();
 
 	virtual effectPtr stop() = 0;
@@ -302,7 +291,7 @@ public:
 
 class StartField : public NotOwnedField {
 public:
-	StartField(const string& name, Money prize);
+	StartField(const std::string& name, Money prize);
 
 	virtual effectPtr pass();
 	virtual effectPtr stop();
@@ -314,7 +303,7 @@ private:
 
 class AwardField : public NotOwnedField {
 public:
-	AwardField(const string& name, Money prize);
+	AwardField(const std::string& name, Money prize);
 
 	virtual effectPtr stop();
 
@@ -325,7 +314,7 @@ private:
 
 class PenaltyField : public NotOwnedField {
 public:
-	PenaltyField(const string& name, Money penalty);
+	PenaltyField(const std::string& name, Money penalty);
 
 	virtual effectPtr stop();
 
@@ -336,7 +325,7 @@ private:
 
 class DepositField : public NotOwnedField {
 public:
-	DepositField(const string& name, Money penalty);
+	DepositField(const std::string& name, Money penalty);
 
 	virtual effectPtr pass();
 	virtual effectPtr stop();
@@ -350,7 +339,7 @@ private:
 
 class AquariumField : public NotOwnedField {
 public:
-	AquariumField(const string& name, unsigned int rounds);
+	AquariumField(const std::string& name, unsigned int rounds);
 
 	virtual effectPtr stop();
 
@@ -361,7 +350,7 @@ private:
 
 class PropertyField : public Field {
 public:
-	PropertyField(const string& name, const Money cost, const Money penalty);
+	PropertyField(const std::string& name, const Money cost, const Money penalty);
 
 	virtual effectPtr stop() = 0;
 
@@ -372,7 +361,7 @@ protected:
 
 class PublicPropertyField : public PropertyField {
 public:
-	PublicPropertyField(const string& name, const Money cost);
+	PublicPropertyField(const std::string& name, const Money cost);
 
 	virtual effectPtr stop();
 };
@@ -380,14 +369,14 @@ public:
 
 class CoralField : public PropertyField {
 public:
-	CoralField(const string& name, const Money cost);
+	CoralField(const std::string& name, const Money cost);
 
 	virtual effectPtr stop();
 };
 
 class IslandField : public NotOwnedField {
 public:
-	IslandField(const string& name);
+	IslandField(const std::string& name);
 
 	virtual effectPtr stop();
 };

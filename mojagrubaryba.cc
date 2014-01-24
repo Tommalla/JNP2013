@@ -4,14 +4,14 @@
 #include <sstream>
 #include <iostream>
 #include <cstdio>
-#include <cassert>
 
 #include "mojagrubaryba.h"
 
+using std::unique_ptr;
+using std::shared_ptr;
 using std::ostringstream;
-using std::printf;
-using std::cout;
-using std::endl;
+using std::vector;
+using std::string;
 
 //MojaGrubaRyba -------------------------------------------------------------------------
 
@@ -65,7 +65,6 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 		counter++;
 		for (PlayerId id = getFirstPlayer(); id != getWatchdogPlayer(); id = getNextPlayerId(id)) {
 			auto p = players.at(id);
-			assert(p);
 			if (p->isActive()) {	//jeśli jeszcze gra
 				if (p->isWaiting()) {
 					continue;
