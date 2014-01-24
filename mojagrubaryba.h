@@ -157,7 +157,11 @@ private:
 class Player {
 public:
 	Player(const Money& money, const BoardPosition& position);
+	Player(const Player &other);
+	Player(Player &&other);
 	virtual ~Player(){}
+
+	virtual clone();
 
 	// Zwraca imię gracza
 	virtual std::string const& getName() const = 0;
