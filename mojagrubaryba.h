@@ -161,7 +161,8 @@ public:
 	Player(Player &&other);
 	virtual ~Player(){}
 
-	virtual clone();
+	virtual void clone(const Player& other);
+	virtual void move(Player &&other);
 
 	// Zwraca imię gracza
 	virtual std::string const& getName() const = 0;
@@ -200,6 +201,9 @@ class HumanPlayer : public Player {
 
 public:
 	HumanPlayer(const Money& money, const BoardPosition& pos, shared_ptr< Human >& human);
+
+	virtual void clone(const HumanPlayer& other);
+	virtual void move(HumanPlayer&& other);
 
 	virtual bool wantBuy(string const& propertyName);
 	virtual bool wantSell(string const& propertyName);

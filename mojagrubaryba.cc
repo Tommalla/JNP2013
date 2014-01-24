@@ -53,15 +53,15 @@ void MojaGrubaRyba::addHumanPlayer(std::shared_ptr< Human > human) {
 void MojaGrubaRyba::play(unsigned int rounds) {
 	if (playersCopy.size() < minNoPlayers)
 		throw TooFewPlayersException(minNoPlayers);
-	
+
 	reset();
-	
+
 	int counter = 1;
 	while (rounds--) {
 		printf("Runda: %d\n", counter);
 		counter++;
 		for (PlayerId id = getFirstPlayer(); id != getWatchdogPlayer(); id = getNextPlayerId(id)) {
-// 			printf("%s ", players.at(id)->getName()); 
+// 			printf("%s ", players.at(id)->getName());
 			cout<<players.at(id)->getName()<<" ";
 			if (players.at(id)->isWaiting()) {
 				printf("pole: Akwarium *** czekanie: %d ***\n", players.at(id)->getRoundsToWait());
@@ -285,6 +285,28 @@ Player::Player(const Money& money, const BoardPosition& position)
 	: money{money}
 	, position{position} {}
 
+Player::Player(const Player& other) {
+	clone(other);
+}
+
+Player::Player(Player&& other) {
+	move(std::move(other));
+}
+
+void Player::clone(const Player& other) {
+	money = other.money;
+	roundsToWait = other.roundsToWait;
+	position = other.position;
+	properties = other.properties;
+}
+
+void Player::move(Player&& other) {
+	money = std::move(other.money);
+	roundsToWait = std::move(other.roundsToWait);
+	position = std::move(other.position);
+	properties = std::move(other.properties);
+}
+
 void Player::wait(unsigned int roundsToWait) {
 	this->roundsToWait += roundsToWait;
 }
@@ -332,6 +354,17 @@ HumanPlayer::HumanPlayer(const Money& money, const BoardPosition &pos, shared_pt
 	: Player{money, pos} {
 		this->human = human->clone();
 	}
+
+void HumanPlayer::clone(const HumanPlayer& other) {
+    Player::clone(other);
+    human = other.human->clone();
+}
+
+void HumanPlayer::move(HumanPlayer&& other) {
+    Player::move(std::move(other));
+    human = std::move(other.human);
+}
+
 
 bool HumanPlayer::wantBuy(const string& propertyName) {
 	return human->wantBuy(propertyName);
