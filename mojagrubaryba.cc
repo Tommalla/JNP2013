@@ -22,13 +22,13 @@ void MojaGrubaRyba::setDie(std::shared_ptr< Die > die) {
 }
 
 void MojaGrubaRyba::addComputerPlayer(GrubaRyba::ComputerLevel level) {
-	if (players.size() + 1 > maxNoPlayers)
+	if (playersCopy.size() + 1 > maxNoPlayers)
 		throw TooManyPlayersException(maxNoPlayers);
 
 	shared_ptr<Player> player;
 	ostringstream convert;
 	string name;
-	convert << "Gracz "<< players.size();
+	convert << "Gracz "<< playersCopy.size();
 	name = convert.str();
 
 	switch(level) {
@@ -39,15 +39,15 @@ void MojaGrubaRyba::addComputerPlayer(GrubaRyba::ComputerLevel level) {
 			player = shared_ptr<Player> (new SmartComputerPlayer(1000, board->getInitialPosition(), name));
 			break;
 	}
-	players.push_back(player);
+	playersCopy.push_back(player);
 }
 
 void MojaGrubaRyba::addHumanPlayer(std::shared_ptr< Human > human) {
-	if (players.size() + 1 > maxNoPlayers)
+	if (playersCopy.size() + 1 > maxNoPlayers)
 		throw TooManyPlayersException(maxNoPlayers);
 
 	shared_ptr<Player> player = shared_ptr<Player>(new HumanPlayer(1000, board->getInitialPosition(), human));
-	players.push_back(player);
+	playersCopy.push_back(player);
 }
 
 void MojaGrubaRyba::play(unsigned int rounds) {
