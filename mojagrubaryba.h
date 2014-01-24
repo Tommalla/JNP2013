@@ -71,10 +71,13 @@ public:
 
 	void giveMoneyTo(const PlayerId& id, const Money& sum);
 
+private:
+	//wypisuje stan po turze
+	void printState() const;
+
 	//Metoda rzuca kostkami i zwraca wynik rzutu.
 	unsigned int rollDies();
 
-private:
 	//Gracz p bankrutuje.
 	//Metoda zwraca ilość pieniędzy odzyskanych od niego ze sprzedawania nieruchomości
 	Money makeBankrupt(shared_ptr<Player>& p);
@@ -176,7 +179,7 @@ public:
 
 	void wait(unsigned int roundsToWait);
 	bool isWaiting();
-	unsigned int getRoundsToWait();
+	unsigned int getRoundsToWait() const;
 
 	//Ustawia stan konta gracza na sum. Nielegalnym jest ustawianie konta na ujemną
 	//wartość. W takim przypadku, metoda rzuca IllegalOperationException i stan konta

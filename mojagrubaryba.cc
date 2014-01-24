@@ -30,7 +30,7 @@ void MojaGrubaRyba::addComputerPlayer(GrubaRyba::ComputerLevel level) {
 	shared_ptr<Player> player;
 	ostringstream convert;
 	string name;
-	convert << "Gracz"<< playersCopy.size();
+	convert << "Gracz"<< playersCopy.size() + 1;
 	name = convert.str();
 
 	switch(level) {
@@ -65,10 +65,8 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 		for (PlayerId id = getFirstPlayer(); id != getWatchdogPlayer(); id = getNextPlayerId(id)) {
 			auto p = players.at(id);
 			assert(p);
-			cout << p->getName() << " ";
 			if (p->isActive()) {	//jeśli jeszcze gra
 				if (p->isWaiting()) {
-					printf("pole: Akwarium *** czekanie: %d ***\n", p->getRoundsToWait());
 					continue;
 				}
 				unsigned int steps = rollDies();
@@ -77,35 +75,23 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 				if (p->isActive()) {	//jeśli gracz po turze dalej jest w grze
 					p->setPosition(moveRes.first);
 					unsigned int rounds;
-// 					printf("pole: %s", board->getFieldName(moveRes.first));
-					cout<<"pole: "<<board->getFieldName(moveRes.first)<<" ";
-// 					cout<<players.at(id)->getMoney()<<" ";
 					if ((rounds = moveRes.second->roundsToWait) > 0) {
 						p->wait(rounds);
-						printf(" *** czekanie: 3 ***\n");
 						continue;
 					}
 					else if (board->canBeBought(moveRes.first)) {
-// 						cout<<"moze ";
-// 						cout<<p->getMoney()<<" ";
 						auto name = board->getFieldName(moveRes.first);
 						auto cost = board->getBuyValue(moveRes.first);
-// 						cout<<cost<<" ";
 						if (p->wantBuy(name) && p->getMoney() >= cost) {
-							cout<<"kupuje ";
-// 							cout<<p->getMoney()<<" ";
 							p->setMoney(p->getMoney() - cost);
-// 							cout<<p->getMoney()<<" ";
 							p->addProperty(moveRes.first);
 							board->own(id, moveRes.first);
 						}
 					}
-					cout << " gotowka " << p->getMoney() << "\n";
 				}
-				else cout << "*** bankrut ***\n";
 			}
-			else cout << "*** bankrut ***\n";
 		}
+		printState();
 	}
 }
 
@@ -138,6 +124,19 @@ Money MojaGrubaRyba::transferMoney(const PlayerId& from, const PlayerId& to, con
 void MojaGrubaRyba::giveMoneyTo(const PlayerId& id, const Money& sum) {
 	auto p = getPlayerAt(id);
 	p->setMoney(p->getMoney() + sum);
+}
+
+void MojaGrubaRyba::printState() const {
+	for (const auto& p: players) {
+		printf("%s ", p->getName().c_str());
+		if (p->isActive()) {
+			if (p->getRoundsToWait() > 0)
+				printf("pole: Akwarium *** czekanie: %d ***\n", p->getRoundsToWait());
+			else {
+				printf("pole: %s gotówka: %d\n", board->getFieldName(p->getPosition()).c_str(), p->getMoney());
+			}
+		} else puts("*** bankrut ***");
+	}
 }
 
 unsigned int MojaGrubaRyba::rollDies() {
@@ -284,7 +283,6 @@ BoardPosition Board::getBoardSize() const {
 	return fields.size();
 }
 
-
 // Koniec (Board) -----------------------------------------------------------------------
 // Player -------------------------------------------------------------------------------
 
@@ -362,7 +360,7 @@ void Player::addProperty(const BoardPosition& pos) {
 	properties.push_back(pos);
 }
 
-unsigned int Player::getRoundsToWait() {
+unsigned int Player::getRoundsToWait() const {
 	return roundsToWait;
 }
 
