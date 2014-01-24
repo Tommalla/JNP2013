@@ -170,6 +170,7 @@ public:
 
 	void wait(unsigned int roundsToWait);
 	bool isWaiting();
+	unsigned int getRoundsToWait();
 
 	//Ustawia stan konta gracza na sum. Nielegalnym jest ustawianie konta na ujemną
 	//wartość. W takim przypadku, metoda rzuca IllegalOperationException i stan konta

@@ -4,8 +4,12 @@
 #include "mojagrubaryba.h"
 #include <sstream>
 #include <iostream>
+#include <cstdio>
 
 using std::ostringstream;
+using std::printf;
+using std::cout;
+using std::endl;
 
 //MojaGrubaRyba -------------------------------------------------------------------------
 
@@ -49,10 +53,18 @@ void MojaGrubaRyba::addHumanPlayer(std::shared_ptr< Human > human) {
 
 void MojaGrubaRyba::play(unsigned int rounds) {
 	reset();
-
-	while (rounds--)
+	
+	int counter = 1;
+	while (rounds--) {
+		printf("Runda: %d\n", counter);
+		counter++;
 		for (PlayerId id = getFirstPlayer(); id != getWatchdogPlayer(); id = getNextPlayerId(id)) {
-			if (players.at(id)) {	//jeśli jeszcze gra
+// 			printf("%s ", players.at(id)->getName()); 
+			cout<<players.at(id)->getName()<<" ";
+			if (players.at(id)->isWaiting()) {
+				printf("pole: Akwarium *** czekanie: %d ***\n", players.at(id)->getRoundsToWait());
+			}
+			else if (players.at(id)) {	//jeśli jeszcze gra
 				unsigned int steps = rollDies();
 				auto moveRes = board->makeMove(id, players.at(id)->getPosition(), steps);
 				shared_ptr<Player> p;
@@ -60,8 +72,12 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 				if (p = players.at(id)) {	//jeśli gracz po turze dalej jest w grze
 					p->setPosition(moveRes.first);
 					unsigned int rounds;
-					if ((rounds = moveRes.second->roundsToWait) > 0)
+// 					printf("pole: %s", board->getFieldName(moveRes.first));
+					cout<<"pole: "<<board->getFieldName(moveRes.first)<<endl;
+					if ((rounds = moveRes.second->roundsToWait) > 0) {
 						p->wait(rounds);
+						printf(" *** czekanie: 3 ***\n");
+					}
 					else if (board->canBeBought(moveRes.first)) {
 						auto name = board->getFieldName(moveRes.first);
 						auto cost = board->getBuyValue(moveRes.first);
@@ -71,9 +87,17 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 							board->own(id, moveRes.first);
 						}
 					}
+					printf(" gotowka %d\n", players.at(id)->getMoney());
+				}
+				else {
+					printf("*** bankrut ***\n");
 				}
 			}
+			else {
+				printf("*** bankrut ***\n");
+			}
 		}
+	}
 }
 
 Money MojaGrubaRyba::takeMoneyFrom(const PlayerId& id, const Money& sum) {
@@ -293,6 +317,10 @@ vector< BoardPosition > Player::getProperties() const {
 
 void Player::addProperty(const BoardPosition& pos) {
 	properties.push_back(pos);
+}
+
+unsigned int Player::getRoundsToWait() {
+	return roundsToWait;
 }
 
 
