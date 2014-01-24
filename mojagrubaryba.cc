@@ -28,7 +28,7 @@ void MojaGrubaRyba::addComputerPlayer(GrubaRyba::ComputerLevel level) {
 	shared_ptr<Player> player;
 	ostringstream convert;
 	string name;
-	convert << "Gracz "<< playersCopy.size();
+	convert << "Gracz"<< playersCopy.size();
 	name = convert.str();
 
 	switch(level) {
@@ -66,9 +66,11 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 			if (players.at(id)) {	//jeśli jeszcze gra
 				if (players.at(id)->isWaiting()) {
 					printf("pole: Akwarium *** czekanie: %d ***\n", players.at(id)->getRoundsToWait());
+					continue;
 				}
 				unsigned int steps = rollDies();
 				auto moveRes = board->makeMove(id, players.at(id)->getPosition(), steps);
+// 				cout<<players.at(id)->getMoney()<<" ";
 				shared_ptr<Player> p;
 
 				if (p = players.at(id)) {	//jeśli gracz po turze dalej jest w grze
@@ -76,20 +78,28 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 					unsigned int rounds;
 // 					printf("pole: %s", board->getFieldName(moveRes.first));
 					cout<<"pole: "<<board->getFieldName(moveRes.first)<<" ";
+// 					cout<<players.at(id)->getMoney()<<" ";
 					if ((rounds = moveRes.second->roundsToWait) > 0) {
 						p->wait(rounds);
 						printf(" *** czekanie: 3 ***\n");
+						continue;
 					}
 					else if (board->canBeBought(moveRes.first)) {
+// 						cout<<"moze ";
+// 						cout<<p->getMoney()<<" ";
 						auto name = board->getFieldName(moveRes.first);
 						auto cost = board->getBuyValue(moveRes.first);
+// 						cout<<cost<<" ";
 						if (p->wantBuy(name) && p->getMoney() >= cost) {
+							cout<<"kupuje ";
+// 							cout<<p->getMoney()<<" ";
 							p->setMoney(p->getMoney() - cost);
+// 							cout<<p->getMoney()<<" ";
 							p->addProperty(moveRes.first);
 							board->own(id, moveRes.first);
 						}
 					}
-					printf(" gotowka %d\n", players.at(id)->getMoney());
+					printf(" gotowka %d\n",p->getMoney());
 				}
 				else {
 					printf("*** bankrut ***\n");
@@ -215,7 +225,7 @@ MoveResult Board::makeMove(const PlayerId& id, const BoardPosition& pos, unsigne
 				gameMaster->giveMoneyTo(id, sum);
 			else {
 				Money paid;
-
+				sum = -sum;
 				auto f = getFieldAt(res.first);
 				if (f->isOwned())	//płacimy komuś trybut
 					paid = gameMaster->transferMoney(id, f->getOwner(), sum);
@@ -282,7 +292,8 @@ BoardPosition Board::getBoardSize() const {
 // Player -------------------------------------------------------------------------------
 
 Player::Player(const Money& money, const BoardPosition& position)
-	: money{money}
+	: roundsToWait(0)
+	, money{money}
 	, position{position} {}
 
 Player::Player(const Player& other) {
@@ -568,7 +579,7 @@ effectPtr PublicPropertyField::stop() {
 	if (this->isOwned())
 		amount = -penalty;
 	else
-		amount = -cost;
+		amount = 0;
 	effectPtr ptr(new EffectInfo(amount, 0));
 	return ptr;
 }
@@ -583,7 +594,7 @@ effectPtr CoralField::stop() {
 	if (this->isOwned())
 		amount = -penalty;
 	else
-		amount = -cost;
+		amount = 0;
 	effectPtr ptr(new EffectInfo(amount, 0));
 	return ptr;
 }
