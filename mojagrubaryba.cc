@@ -63,10 +63,10 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 		for (PlayerId id = getFirstPlayer(); id != getWatchdogPlayer(); id = getNextPlayerId(id)) {
 // 			printf("%s ", players.at(id)->getName());
 			cout<<players.at(id)->getName()<<" ";
-			if (players.at(id)->isWaiting()) {
-				printf("pole: Akwarium *** czekanie: %d ***\n", players.at(id)->getRoundsToWait());
-			}
-			else if (players.at(id)) {	//jeśli jeszcze gra
+			if (players.at(id)) {	//jeśli jeszcze gra
+				if (players.at(id)->isWaiting()) {
+					printf("pole: Akwarium *** czekanie: %d ***\n", players.at(id)->getRoundsToWait());
+				}
 				unsigned int steps = rollDies();
 				auto moveRes = board->makeMove(id, players.at(id)->getPosition(), steps);
 				shared_ptr<Player> p;
@@ -75,7 +75,7 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 					p->setPosition(moveRes.first);
 					unsigned int rounds;
 // 					printf("pole: %s", board->getFieldName(moveRes.first));
-					cout<<"pole: "<<board->getFieldName(moveRes.first)<<endl;
+					cout<<"pole: "<<board->getFieldName(moveRes.first)<<" ";
 					if ((rounds = moveRes.second->roundsToWait) > 0) {
 						p->wait(rounds);
 						printf(" *** czekanie: 3 ***\n");
@@ -314,7 +314,7 @@ void Player::wait(unsigned int roundsToWait) {
 bool Player::isWaiting() {
 	if (roundsToWait > 0)
 		roundsToWait--;
-	return (roundsToWait == 0);
+	return (roundsToWait != 0);
 }
 
 void Player::setMoney(const Money& sum) {
