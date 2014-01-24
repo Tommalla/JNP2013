@@ -59,6 +59,7 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 	reset();
 
 	int counter = 1;
+	size_t stillStanding = players.size();
 	while (rounds--) {
 		printf("Runda: %d\n", counter);
 		counter++;
@@ -86,9 +87,13 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 							board->own(id, moveRes.first);
 						}
 					}
+				} else if(--stillStanding == 1) {	//odpadł gracz
+					printState();	//i jest koniec gry
+					return;
 				}
 			}
 		}
+
 		printState();
 	}
 }
