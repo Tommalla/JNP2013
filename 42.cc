@@ -1,3 +1,5 @@
+/* Tomasz Zakrzewski, tz336079	 /
+ * JNP7				*/
 #include <stack>
 #include <string>
 #include <functional>
@@ -5,14 +7,9 @@
 #include <cassert>
 #include <unordered_map>
 #include <set>
-#include <cstdio>
 
-// FIXME
-// Const std functions?
-// Typedefs
 typedef std::function<int(void)> Lazy;
 
-//Exceptions
 class SyntaxError : public std::exception {
 public:
     SyntaxError() {}
@@ -54,8 +51,6 @@ private:
 		try {
 			return operatorMap.at(c);
 		} catch (std::out_of_range& e) {
-			if (valueInAllowed(c))
-				throw SyntaxError();
 			throw UnknownOperator();
 		}
 	}
@@ -73,15 +68,11 @@ public:
 	}
 
 	Lazy parse(const std::string& s) const {
-		if (s.length() == 0)
-			throw SyntaxError();
-
 		std::stack<Lazy> operands;
 
-		for (const auto c: s) {
+		for (const auto c: s)
 			if (valueInAllowed(c)) {
-				int tmp = getIntValue(c);
-				operands.push([=] () -> int { return tmp; } );
+				operands.push([=] () -> int { return getIntValue(c); } );
 			} else {
 				auto fn = getOperator(c);
 				if (operands.size() < 2)
@@ -94,8 +85,6 @@ public:
 				operands.pop();
 				operands.push([=]() -> int { return fn(a, b); } );
 			}
-
-		}
 
 		if (operands.size() != 1)
 			throw SyntaxError();
