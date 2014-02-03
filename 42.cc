@@ -57,10 +57,10 @@ private:
 
 public:
 	LazyCalculator() {
-		operatorMap['+'] = [] (Lazy a, Lazy b) -> int { return a() + b(); };
-		operatorMap['*'] = [] (Lazy a, Lazy b) -> int { return a() * b(); };
-		operatorMap['-'] = [] (Lazy a, Lazy b) -> int { return a() - b(); };
-		operatorMap['/'] = [] (Lazy a, Lazy b) -> int { return a() / b(); };
+		define('+', [] (Lazy a, Lazy b) -> int { return a() + b(); });
+		define('*', [] (Lazy a, Lazy b) -> int { return a() * b(); });
+		define('-', [] (Lazy a, Lazy b) -> int { return a() - b(); });
+		define('/', [] (Lazy a, Lazy b) -> int { return a() / b(); });
 
 		allowed.insert('0');
 		allowed.insert('2');
