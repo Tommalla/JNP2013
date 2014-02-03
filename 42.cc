@@ -5,7 +5,40 @@
 #include <cassert>
 
 // FIXME
-// ŁAPA
+//Exceptions
+//TODO: contain meaningful information2
+class SyntaxError : public std::exception {
+public:
+    SyntaxError() {}
+    const char* what() const noexcept {
+	    return "Wrong syntax!";
+    }
+};
+
+class OperatorAlreadyDefined : public std::exception {
+public:
+	OperatorAlreadyDefined() {}
+	const char* what() const noexcept {
+		return "Tried to redefine an operator!";
+	}
+};
+
+class UnknownOperator : public std::exception {
+public:
+	UnknownOperator() {}
+	const char* what() const noexcept {
+		return "Operator not known!";
+	}
+};
+
+class Lazy {
+	//TODO
+	public:
+		int operator()() {
+			//TODO
+		}
+	private:
+};
 
 class LazyCalculator {
 	// FIXME
