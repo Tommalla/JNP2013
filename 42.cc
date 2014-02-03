@@ -3,10 +3,16 @@
 #include <functional>
 #include <exception>
 #include <cassert>
+#include <unordered_map>
+#include <set>
+#include <cstdio>
 
 // FIXME
+// Const std functions?
+// Typedefs
+typedef std::function<int(void)> Lazy;
+
 //Exceptions
-//TODO: contain meaningful information2
 class SyntaxError : public std::exception {
 public:
     SyntaxError() {}
@@ -31,26 +37,61 @@ public:
 	}
 };
 
-class Lazy {
-	//TODO
-	public:
-		int operator()() {
-			//TODO
-		}
-	private:
-};
-
 class LazyCalculator {
-	// FIXME
-	// USZY
+private:
+	std::unordered_map<char, std::function<int(Lazy, Lazy)>> operatorMap;
+	std::set<char> allowed;
+
+	int getIntValue(const char c) const {
+		if (allowed.count(c) == 0)
+			throw SyntaxError();
+		return c - '0';
+	}
+
+	std::function<int(Lazy, Lazy)> getOperator(const char c) const {
+		try {
+			return operatorMap.at(c);
+		} catch (std::out_of_range& e) {
+			throw UnknownOperator();
+		}
+	}
 
 public:
-// 	FIXME
-// 	OGON
+	LazyCalculator() {
+		operatorMap['+'] = [] (Lazy a, Lazy b) -> int { return a() + b(); };
+		operatorMap['*'] = [] (Lazy a, Lazy b) -> int { return a() * b(); };
+		operatorMap['-'] = [] (Lazy a, Lazy b) -> int { return a() - b(); };
+		operatorMap['/'] = [] (Lazy a, Lazy b) -> int { return a() / b(); };
+
+		allowed.insert('0');
+		allowed.insert('2');
+		allowed.insert('4');
+	}
 
 	Lazy parse(const std::string& s) const {
-// 		FIXME
-// 		NOS
+		if (s.length() == 0)
+			throw SyntaxError();
+
+		bool op = false;
+		int operand = getIntValue(s[0]);
+
+		Lazy res = [=] () -> int {return operand;};
+
+		for (size_t i = 1; i < s.length(); ++i, op = ~op) {
+			if (op) {
+				//we are expecting an operator
+				auto fn = getOperator(s[i]);
+				Lazy literal = [=] () -> int { return operand; };
+// 				printf("Constructing: %d %c %d\n", res(), s[i], literal());
+				res = [=] () -> int { return fn(res, literal); };
+			} else {
+				//we are expecting a literal
+				operand = getIntValue(s[i]);
+			}
+// 			printf("%d\n", res());
+		}
+
+		return res;
 	}
 
 	int calculate(const std::string& s) const {
@@ -58,8 +99,8 @@ public:
 	}
 
 	void define(char c, std::function<int(Lazy, Lazy)> fn) {
-// 		FIXME
-// 		DRUGA ŁAPA
+		if (operatorMap.emplace(c, fn).second != true)
+			throw OperatorAlreadyDefined();
 	}
 };
 
