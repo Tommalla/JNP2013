@@ -42,9 +42,11 @@ private:
 	std::unordered_map<char, std::function<int(Lazy, Lazy)>> operatorMap;
 	std::set<char> allowed;
 
+	bool valueInAllowed(const char c) const {
+		return allowed.count(c) != 0;
+	}
+
 	int getIntValue(const char c) const {
-		if (allowed.count(c) == 0)
-			throw SyntaxError();
 		return c - '0';
 	}
 
@@ -52,6 +54,8 @@ private:
 		try {
 			return operatorMap.at(c);
 		} catch (std::out_of_range& e) {
+			if (valueInAllowed(c))
+				throw SyntaxError();
 			throw UnknownOperator();
 		}
 	}
@@ -72,26 +76,30 @@ public:
 		if (s.length() == 0)
 			throw SyntaxError();
 
-		bool op = false;
-		int operand = getIntValue(s[0]);
+		std::stack<Lazy> operands;
 
-		Lazy res = [=] () -> int {return operand;};
-
-		for (size_t i = 1; i < s.length(); ++i, op = ~op) {
-			if (op) {
-				//we are expecting an operator
-				auto fn = getOperator(s[i]);
-				Lazy literal = [=] () -> int { return operand; };
-// 				printf("Constructing: %d %c %d\n", res(), s[i], literal());
-				res = [=] () -> int { return fn(res, literal); };
+		for (const auto c: s) {
+			if (valueInAllowed(c)) {
+				int tmp = getIntValue(c);
+				operands.push([=] () -> int { return tmp; } );
 			} else {
-				//we are expecting a literal
-				operand = getIntValue(s[i]);
+				auto fn = getOperator(c);
+				if (operands.size() < 2)
+					throw SyntaxError();
+
+				Lazy a, b;
+				b = operands.top();
+				operands.pop();
+				a = operands.top();
+				operands.pop();
+				operands.push([=]() -> int { return fn(a, b); } );
 			}
-// 			printf("%d\n", res());
+
 		}
 
-		return res;
+		if (operands.size() != 1)
+			throw SyntaxError();
+		return operands.top();
 	}
 
 	int calculate(const std::string& s) const {
