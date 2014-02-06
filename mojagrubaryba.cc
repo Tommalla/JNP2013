@@ -185,8 +185,11 @@ PlayerId MojaGrubaRyba::getNextPlayerId(const PlayerId& id) {
 }
 
 void MojaGrubaRyba::reset() {
+	if (!dieCopy)
+		throw NoDieException();
+
 	players = vector<shared_ptr<Player>>(playersCopy);
-	board = unique_ptr<Board>(new Board(this));
+	board = std::move(unique_ptr<Board>(new Board(this)));
 	die = dieCopy->clone();
 }
 
@@ -440,7 +443,8 @@ bool SmartComputerPlayer::wantSell(const string& propertyName) {
 
 Field::Field(const string& name, const Money cost)
 	: name{name}
-	, cost{cost} {}
+	, cost{cost}
+	, owned{false} {}
 
 Field::~Field() {
 }
