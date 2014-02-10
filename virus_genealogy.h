@@ -86,7 +86,6 @@ private:
 
 public:
 	//constructor
-	//FIXME przywroc const na stemid
 	VirusGenealogy(typename Virus::id_type const &stem_id) {
 		this->stem_id = stem_id;
 		stem = typename Node::SharedPtr(new Node(stem_id, this));
@@ -123,11 +122,7 @@ public:
 		auto iter = get_iterator(parent_id);
 
 		typename Node::SharedPtr sp;
-
-		//try{
 		sp = typename Node::SharedPtr( new Node(id, this, iter->second ));
-		//} catch(&exception e){
-		//}
 		nodes.emplace(id, typename Node::WeakPtr(sp));
 		iter->second.lock()->children.insert(sp);
 	}
@@ -141,28 +136,23 @@ public:
 
 		typename Node::SharedPtr sp;
 
-		//try {
 
-			typename Node::ParentSet parent_set;
-			for(auto ptr = parent_ids.begin(); ptr != parent_ids.end(); ptr++)
-				parent_set.insert(typename Node::WeakPtr( get_iterator( *ptr )->second ));
+		typename Node::ParentSet parent_set;
+		for(auto ptr = parent_ids.begin(); ptr != parent_ids.end(); ptr++)
+			parent_set.insert(typename Node::WeakPtr( get_iterator( *ptr )->second ));
 
-			sp = typename Node::SharedPtr( new Node(id, this, parent_set) );
+		sp = typename Node::SharedPtr( new Node(id, this, parent_set) );
 			
-
-		//} catch (...) {}   //ignore it - there's nothing we can do
-
 		nodes.emplace(id, typename Node::WeakPtr(sp));
 		
 		for(auto ptr = sp->parents.begin(); ptr != sp->parents.end(); ptr++)
 				ptr->lock()->children.insert(typename Node::SharedPtr(sp));
 	}
 
-	bool exists(typename Virus::id_type const &id) const {
-		auto k = nodes.end();
-		try{
-			k = get_iterator(id);
-		} catch (VirusNotFound& e){}
+	bool exists(typename Virus::id_type const &id) {
+		typename Graph::const_iterator k = nodes.end();
+		k = nodes.find(id);
+		if (k != nodes.end() && k->second.expired()) { nodes.erase(k); k = nodes.end(); }
 		return k != nodes.end();
 	}
 
@@ -181,7 +171,6 @@ public:
 		for(auto ptr = iter->second.lock()->parents.begin(); ptr != iter->second.lock()->parents.end(); ptr++)
 			(*ptr).lock()->children.erase( sp );
 
-		//~Node() runs when out of this scope
 	}
 
 	Virus& operator[](typename Virus::id_type const &id) const {
