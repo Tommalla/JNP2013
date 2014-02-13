@@ -107,6 +107,7 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 
 Money MojaGrubaRyba::takeMoneyFrom(const PlayerId& id, const Money& sum) {
 	auto p = getPlayerAt(id);
+//     printf("Zabieramy graczowi %d %d hajsu\n", id, sum);
 
 	if (p->getMoney() >= sum) {
 		p->setMoney(p->getMoney() - sum);
@@ -124,6 +125,7 @@ Money MojaGrubaRyba::takeMoneyFrom(const PlayerId& id, const Money& sum) {
 }
 
 Money MojaGrubaRyba::transferMoney(const PlayerId& from, const PlayerId& to, const Money& sum) {
+//     printf("Próbuję przekazać %d od gracza %d graczowi %d\n", sum, from, to);
 	Money debt = takeMoneyFrom(from, sum);
 
  	if (debt == -1)
@@ -136,6 +138,7 @@ Money MojaGrubaRyba::transferMoney(const PlayerId& from, const PlayerId& to, con
 
 void MojaGrubaRyba::giveMoneyTo(const PlayerId& id, const Money& sum) {
 	auto p = getPlayerAt(id);
+//     printf("%d dostaje %d hajsu\n", id, sum);
 	p->setMoney(p->getMoney() + sum);
 }
 
@@ -166,10 +169,17 @@ Money MojaGrubaRyba::makeBankrupt(shared_ptr< Player >& p, Money sum) {
             toSell.push_back(*iter);
         }
 
-	Money res = sellPropertiesOf(p, toSell);
-    if (sum > 0)    //nie starczyło pieniędzy
+    Money res;
+
+    if (sum <= 0)
+        res = sellPropertiesOf(p, toSell);
+    else { //nie starczyło pieniędzy
         p->deactivate();	//usuwamy playera
-	return res;
+        auto properties = p->getProperties();
+        res = sellPropertiesOf(p, properties);
+    }
+
+    return res;
 }
 
 Money MojaGrubaRyba::sellPropertiesOf(std::shared_ptr<Player>& p, std::vector<BoardPosition>& properties) {
@@ -344,6 +354,8 @@ void Player::reset() {
     position = startPosition;
     money = startMoney;
     active = true;
+    roundsToWait = 0;
+    properties.clear();
 }
 
 void Player::clone(const Player& other) {
