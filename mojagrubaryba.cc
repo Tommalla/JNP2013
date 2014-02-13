@@ -24,13 +24,13 @@ void MojaGrubaRyba::setDie(std::shared_ptr< Die > die) {
 }
 
 void MojaGrubaRyba::addComputerPlayer(GrubaRyba::ComputerLevel level) {
-	if (playersCopy.size() + 1 > maxNoPlayers)
+	if (players.size() + 1 > maxNoPlayers)
 		throw TooManyPlayersException(maxNoPlayers);
 
 	shared_ptr<Player> player;
 	ostringstream convert;
 	string name;
-	convert << "Gracz"<< playersCopy.size() + 1;
+	convert << "Gracz"<< players.size() + 1;
 	name = convert.str();
 
 	switch(level) {
@@ -41,19 +41,19 @@ void MojaGrubaRyba::addComputerPlayer(GrubaRyba::ComputerLevel level) {
 			player = shared_ptr<Player> (new SmartComputerPlayer(1000, board->getInitialPosition(), name));
 			break;
 	}
-	playersCopy.push_back(player);
+	players.push_back(player);
 }
 
 void MojaGrubaRyba::addHumanPlayer(std::shared_ptr< Human > human) {
-	if (playersCopy.size() + 1 > maxNoPlayers)
+	if (players.size() + 1 > maxNoPlayers)
 		throw TooManyPlayersException(maxNoPlayers);
 
 	shared_ptr<Player> player = shared_ptr<Player>(new HumanPlayer(1000, board->getInitialPosition(), human));
-	playersCopy.push_back(player);
+	players.push_back(player);
 }
 
 void MojaGrubaRyba::play(unsigned int rounds) {
-	if (playersCopy.size() < minNoPlayers)
+	if (players.size() < minNoPlayers)
 		throw TooFewPlayersException(minNoPlayers);
 
 	reset();
@@ -79,11 +79,19 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 						p->wait(rounds);
 					else if (board->canBeBought(moveRes.first)) {
 						auto name = board->getFieldName(moveRes.first);
-						auto cost = board->getBuyValue(moveRes.first);
-						if (p->wantBuy(name) && p->getMoney() >= cost) {
-							p->setMoney(p->getMoney() - cost);
-							p->addProperty(moveRes.first);
-							board->own(id, moveRes.first);
+						Money cost = board->getBuyValue(moveRes.first);
+						if (p->wantBuy(name)) {
+                            if (p->getMoney() < cost) {
+                                auto sellRes = trySellPropertiesOf(p);
+                                if (p->getMoney() + sellRes.first >= cost)
+                                    p->setMoney(p->getMoney() + sellPropertiesOf(p, sellRes.second));
+                            }
+
+							if (p->getMoney() >= cost) {
+                                p->setMoney(p->getMoney() - cost);
+                                p->addProperty(moveRes.first);
+                                board->own(id, moveRes.first);
+                            }
 						}
 					}
 				} else if(--stillStanding == 1) {	//odpadł gracz
@@ -106,17 +114,20 @@ Money MojaGrubaRyba::takeMoneyFrom(const PlayerId& id, const Money& sum) {
 	}
 
 	//player nie ma dosyć środków, musi zbankrutować
-	Money debt = makeBankrupt(p);
-	if (debt >= sum)
-		return -1;
-	return debt;
+	Money debt = makeBankrupt(p, sum - p->getMoney());
+    p->setMoney(p->getMoney() + debt);
+	if (p->getMoney() >= sum) {
+        p->setMoney(p->getMoney() - sum);
+		return (p->getMoney() > 0) ? sum : -1;
+    }
+    return p->getMoney();  //bankrupt
 }
 
 Money MojaGrubaRyba::transferMoney(const PlayerId& from, const PlayerId& to, const Money& sum) {
 	Money debt = takeMoneyFrom(from, sum);
 
-	if (debt == -1)
-		debt = sum;
+ 	if (debt == -1)
+ 		debt = sum;
 
 	giveMoneyTo(to, debt);
 
@@ -145,25 +156,48 @@ unsigned int MojaGrubaRyba::rollDies() {
 	return die->roll() + die->roll();
 }
 
-Money MojaGrubaRyba::makeBankrupt(shared_ptr< Player >& p){
-	Money res = sellPropertiesOf(p);
-	p->deactivate();	//usuwamy playera
+Money MojaGrubaRyba::makeBankrupt(shared_ptr< Player >& p, Money sum) {
+    std::vector<BoardPosition> toSell;
+    auto properties = p->getProperties();
+
+    for (auto iter = begin(properties); iter != end(properties) && sum > 0; ++iter)
+        if (p->wantSell(board->getFieldName(*iter))) {
+            sum -= board->getSellValue(*iter);
+            toSell.push_back(*iter);
+        }
+
+	Money res = sellPropertiesOf(p, toSell);
+    if (sum > 0)    //nie starczyło pieniędzy
+        p->deactivate();	//usuwamy playera
 	return res;
 }
 
-Money MojaGrubaRyba::sellPropertiesOf(shared_ptr<Player>& p) {
+Money MojaGrubaRyba::sellPropertiesOf(std::shared_ptr<Player>& p, std::vector<BoardPosition>& properties) {
 	Money res = 0;
-	auto properties = p->getProperties();
-	for(const auto &pos: properties) {
-		auto name = board->getFieldName(pos);
-		if (p->wantSell(name)) {	//próbujemy sprzedawać wszystko
-			res += board->getSellValue(pos);
-			board->deown(pos);
-		}
+	for (const auto& pos: properties) {
+        res += board->getSellValue(pos);
+        board->deown(pos);
+        p->removeProperty(pos);
 	}
 
 	return res;
 }
+
+std::pair< Money, vector< BoardPosition > > MojaGrubaRyba::trySellPropertiesOf(shared_ptr< Player >& p) {
+    std::pair<Money, std::vector<BoardPosition>> res;
+    res.first = 0;
+    auto properties = p->getProperties();
+    for (auto iter = begin(properties); iter != end(properties) /*&& sum > 0*/; ++iter) {
+        auto name = board->getFieldName(*iter);
+        if (p->wantSell(name)) {
+            auto value = board->getSellValue(*iter);
+            res.first += value;
+            res.second.push_back(*iter);
+        }
+    }
+    return res;
+}
+
 
 shared_ptr< Player > MojaGrubaRyba::getPlayerAt(const PlayerId& id) const {
 	auto p = players.at(id);
@@ -188,7 +222,8 @@ void MojaGrubaRyba::reset() {
 	if (!dieCopy)
 		throw NoDieException();
 
-	players = vector<shared_ptr<Player>>(playersCopy);
+    for (auto& p: players)
+        p->reset();
 	board = std::move(unique_ptr<Board>(new Board(this)));
 	die = dieCopy->clone();
 }
@@ -294,8 +329,8 @@ BoardPosition Board::getBoardSize() const {
 Player::Player(const Money& money, const BoardPosition& position)
 	: active{true}
 	, roundsToWait(0)
-	, money{money}
-	, position{position} {}
+	, startMoney{money}
+	, startPosition{position} {}
 
 Player::Player(const Player& other) {
 	clone(other);
@@ -303,6 +338,12 @@ Player::Player(const Player& other) {
 
 Player::Player(Player&& other) {
 	move(std::move(other));
+}
+
+void Player::reset() {
+    position = startPosition;
+    money = startMoney;
+    active = true;
 }
 
 void Player::clone(const Player& other) {
@@ -363,6 +404,15 @@ vector< BoardPosition > Player::getProperties() const {
 
 void Player::addProperty(const BoardPosition& pos) {
 	properties.push_back(pos);
+}
+
+void Player::removeProperty(const BoardPosition& pos) {
+    for (int i = 0; i < properties.size(); ++i)
+        if (properties[i] == pos) {
+            std::swap(properties[i], properties.back());
+            properties.pop_back();
+            return;
+        }
 }
 
 unsigned int Player::getRoundsToWait() const {
@@ -443,8 +493,8 @@ bool SmartComputerPlayer::wantSell(const string& propertyName) {
 
 Field::Field(const string& name, const Money cost)
 	: name{name}
-	, cost{cost}
-	, owned{false} {}
+	, owned{false}
+	, cost{cost} {}
 
 Field::~Field() {
 }

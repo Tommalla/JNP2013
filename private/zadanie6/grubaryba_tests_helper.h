@@ -122,7 +122,7 @@ namespace test {
         TestSelling(std::string const& name_): name(name_), saleInProgress(false) {}
 
         void addSelling(Property const& prop) {
-            // std::cout << "wants to sell " << prop << std::endl;
+//             std::cout << "wants to sell " << prop << std::endl;
             auto found = sellQuestions.find(prop);
             if (found == sellQuestions.end()) {
                 sellQuestions[prop] = 1;
@@ -138,7 +138,7 @@ namespace test {
         }
 
         void addBuying(Property const& prop) {
-            // std::cout << "wants to buy " << prop << std::endl;
+//             std::cout << "wants to buy " << prop << std::endl;
             if (buying.size() > 0) {
                 bought.insert(buying);
             }

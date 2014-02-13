@@ -71,11 +71,16 @@ private:
 
 	//Gracz p bankrutuje.
 	//Metoda zwraca ilość pieniędzy odzyskanych od niego ze sprzedawania nieruchomości
-	Money makeBankrupt(std::shared_ptr<Player>& p);
+	Money makeBankrupt(std::shared_ptr< Player >& p, Money sum);
 
 	//Pyta gracza o każdą z jego nieruchomości i próbuje je sprzedać.
 	//Zwraca ilość uzbieranych pieniędzy.
-	Money sellPropertiesOf(std::shared_ptr< Player >& p);
+	Money sellPropertiesOf(std::shared_ptr<Player>& p, std::vector<BoardPosition>& properties);
+
+    //Symuluje sellPropertiesOf bez faktycznego sprzedawania
+    //Zwraca parę <Money, std::vector<BoardPosition>> - ilość pieniędzy uzyskanych z transakcji
+    //oraz lista sprzedawanych nieruchomości
+    std::pair<Money, std::vector<BoardPosition>> trySellPropertiesOf(std::shared_ptr< Player >& p);
 
 	//Zwraca std::shared_ptr na gracza o danym id
 	std::shared_ptr<Player> getPlayerAt(const PlayerId& id) const;
@@ -97,9 +102,6 @@ private:
 	std::shared_ptr<Die> die;
 	std::shared_ptr<Die> dieCopy;
 	std::vector<std::shared_ptr<Player>> players;
-	//przechowuje kopię playerów z oryginalnymi wartościami
-	//na potrzeby gry od nowa
-	std::vector<std::shared_ptr<Player>> playersCopy;
 	std::unique_ptr<Board> board;
 };
 
@@ -183,6 +185,9 @@ public:
 	//przez kopię, bo może się zmieniać
 	std::vector<BoardPosition> getProperties() const;
 	void addProperty(const BoardPosition& pos);
+    void removeProperty(const BoardPosition& pos);
+
+    virtual void reset();
 
 protected:
 	virtual void clone(const Player &other);
@@ -192,8 +197,8 @@ private:
 
 	bool active;
 	unsigned int roundsToWait;
-	Money money;
-	BoardPosition position;
+	Money money, startMoney;
+	BoardPosition position, startPosition;
 	std::vector<BoardPosition> properties;
 };
 
