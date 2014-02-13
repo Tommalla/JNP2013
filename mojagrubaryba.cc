@@ -107,21 +107,19 @@ void MojaGrubaRyba::play(unsigned int rounds) {
 
 Money MojaGrubaRyba::takeMoneyFrom(const PlayerId& id, const Money& sum) {
 	auto p = getPlayerAt(id);
-//     printf("Zabieramy graczowi %d %d hajsu\n", id, sum);
+
+    if (p->getMoney() < sum)
+        //player nie ma dosyć środków, musi zbankrutować
+        //w wyniku zmian związanych z treścią niekoniecznie musi tu zbankrutować
+        //może się okazać, że sprzedając częśc nieruchomości okaże się wypłacalny
+        p->setMoney(p->getMoney() + makeBankrupt(p, sum - p->getMoney()));
 
 	if (p->getMoney() >= sum) {
 		p->setMoney(p->getMoney() - sum);
 		return sum;
 	}
 
-	//player nie ma dosyć środków, musi zbankrutować
-	Money debt = makeBankrupt(p, sum - p->getMoney());
-    p->setMoney(p->getMoney() + debt);
-	if (p->getMoney() >= sum) {
-        p->setMoney(p->getMoney() - sum);
-		return (p->getMoney() > 0) ? sum : -1;
-    }
-    return p->getMoney();  //bankrupt
+    return p->getMoney();  //bankrut
 }
 
 Money MojaGrubaRyba::transferMoney(const PlayerId& from, const PlayerId& to, const Money& sum) {
@@ -176,7 +174,7 @@ Money MojaGrubaRyba::makeBankrupt(shared_ptr< Player >& p, Money sum) {
     else { //nie starczyło pieniędzy
         p->deactivate();	//usuwamy playera
         auto properties = p->getProperties();
-        res = sellPropertiesOf(p, properties);
+        res = sellPropertiesOf(p, properties);  //sprzedajemy WSZYSTKIE nieruchomości
     }
 
     return res;
@@ -419,7 +417,7 @@ void Player::addProperty(const BoardPosition& pos) {
 }
 
 void Player::removeProperty(const BoardPosition& pos) {
-    for (int i = 0; i < properties.size(); ++i)
+    for (size_t i = 0; i < properties.size(); ++i)
         if (properties[i] == pos) {
             std::swap(properties[i], properties.back());
             properties.pop_back();
