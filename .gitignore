@@ -1,5 +1,6 @@
 # binary
 pociagi
+main
 DlugieLinie/dl
 
 #KDevelop
@@ -21,6 +22,5 @@ network_test2
 *.lai
 *.la
 *.a
-
 
 svn
