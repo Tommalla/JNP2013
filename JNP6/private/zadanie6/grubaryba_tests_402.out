@@ -1,0 +1,61 @@
+Start: Test: HUMAN (sprzedaz podczas kupna)
+Runda: 1
+Czlowiek0 pole: Aporina gotowka: 824
+Czlowiek1 pole: Aporina gotowka: 956
+Runda: 2
+Czlowiek0 pole: Grota gotowka: 644
+Czlowiek1 pole: Grota gotowka: 836
+Runda: 3
+Czlowiek0 pole: Statek gotowka: 479
+Czlowiek1 pole: Statek gotowka: 721
+Runda: 4
+Czlowiek0 pole: Pennatula gotowka: 159
+Czlowiek1 pole: Pennatula gotowka: 641
+Runda: 5
+Czlowiek0 pole: Anemonia gotowka: 81
+Czlowiek1 pole: Anemonia gotowka: 659
+Runda: 6
+Czlowiek0 pole: Menella gotowka: 522
+Czlowiek1 pole: Menella gotowka: 603
+Runda: 7
+Czlowiek0 pole: Start gotowka: 557
+Czlowiek1 pole: Start gotowka: 638
+Runda: 8
+Czlowiek0 pole: Aporina gotowka: 381
+Czlowiek1 pole: Aporina gotowka: 594
+Runda: 9
+Czlowiek0 pole: Grota gotowka: 201
+Czlowiek1 pole: Grota gotowka: 474
+Runda: 10
+Czlowiek0 pole: Statek gotowka: 436
+Czlowiek1 pole: Statek gotowka: 359
+Runda: 11
+Czlowiek0 pole: Pennatula gotowka: 116
+Czlowiek1 pole: Pennatula gotowka: 279
+Runda: 12
+Czlowiek0 pole: Anemonia gotowka: 38
+Czlowiek1 pole: Anemonia gotowka: 297
+Runda: 13
+Czlowiek0 pole: Menella gotowka: 219
+Czlowiek1 pole: Menella gotowka: 241
+Runda: 14
+Czlowiek0 pole: Start gotowka: 254
+Czlowiek1 pole: Start gotowka: 276
+Runda: 15
+Czlowiek0 pole: Aporina gotowka: 78
+Czlowiek1 pole: Aporina gotowka: 232
+Runda: 16
+Czlowiek0 pole: Grota gotowka: 148
+Czlowiek1 pole: Grota gotowka: 112
+Runda: 17
+Czlowiek0 pole: Statek gotowka: 130
+Czlowiek1 *** bankrut *** 
+End: Test: HUMAN (sprzedaz podczas kupna)
+Czlowiek0
+Anemonia=2
+Aporina=3
+Grota=3
+Menella=2
+Pennatula=2
+Statek=2
+Czlowiek1

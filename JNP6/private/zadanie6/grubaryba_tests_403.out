@@ -1,0 +1,47 @@
+Start: Test: HUMAN (sprzedaz podczas oplat)
+Runda: 1
+Czlowiek0 pole: Aporina gotowka: 780
+Czlowiek1 pole: Statek gotowka: 735
+Runda: 2
+Czlowiek0 pole: Statek gotowka: 665
+Czlowiek1 pole: Statek gotowka: 870
+Runda: 3
+Czlowiek0 pole: Statek gotowka: 600
+Czlowiek1 pole: Statek gotowka: 1005
+Runda: 4
+Czlowiek0 pole: Statek gotowka: 535
+Czlowiek1 pole: Statek gotowka: 1140
+Runda: 5
+Czlowiek0 pole: Statek gotowka: 470
+Czlowiek1 pole: Statek gotowka: 1275
+Runda: 6
+Czlowiek0 pole: Statek gotowka: 405
+Czlowiek1 pole: Statek gotowka: 1410
+Runda: 7
+Czlowiek0 pole: Statek gotowka: 340
+Czlowiek1 pole: Statek gotowka: 1545
+Runda: 8
+Czlowiek0 pole: Statek gotowka: 275
+Czlowiek1 pole: Statek gotowka: 1680
+Runda: 9
+Czlowiek0 pole: Statek gotowka: 210
+Czlowiek1 pole: Statek gotowka: 1815
+Runda: 10
+Czlowiek0 pole: Statek gotowka: 145
+Czlowiek1 pole: Statek gotowka: 1950
+Runda: 11
+Czlowiek0 pole: Statek gotowka: 80
+Czlowiek1 pole: Statek gotowka: 2085
+Runda: 12
+Czlowiek0 pole: Statek gotowka: 15
+Czlowiek1 pole: Statek gotowka: 2220
+Runda: 13
+Czlowiek0 pole: Statek gotowka: 60
+Czlowiek1 pole: Statek gotowka: 2355
+Runda: 14
+Czlowiek0 *** bankrut *** 
+Czlowiek1 pole: Statek gotowka: 2450
+End: Test: HUMAN (sprzedaz podczas oplat)
+Czlowiek0
+Aporina=1
+Czlowiek1
