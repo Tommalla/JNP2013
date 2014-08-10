@@ -3,12 +3,14 @@ pociagi
 main
 DlugieLinie/dl
 example
+network_test1
+network_test2
+private/42
 
 #KDevelop
 *.kdev*
-*kate-swp*
-network_test1
-network_test2
+*kate-swp
+*.kdev4*
 
 # Compiled Object files
 *.slo
