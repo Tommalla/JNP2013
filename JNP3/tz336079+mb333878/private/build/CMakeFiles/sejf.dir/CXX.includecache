@@ -1,0 +1,34 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/tommalla/Programowanie/C++/Języki i Narzędzia Programowania/JNP3/tz336079+mb333878/kontroler.cc
+kontroler.h
+/home/tommalla/Programowanie/C++/Języki i Narzędzia Programowania/JNP3/tz336079+mb333878/kontroler.h
+
+/home/tommalla/Programowanie/C++/Języki i Narzędzia Programowania/JNP3/tz336079+mb333878/kontroler.h
+ostream
+-
+
+/home/tommalla/Programowanie/C++/Języki i Narzędzia Programowania/JNP3/tz336079+mb333878/main.cpp
+iostream
+-
+sejf.h
+/home/tommalla/Programowanie/C++/Języki i Narzędzia Programowania/JNP3/tz336079+mb333878/sejf.h
+
+/home/tommalla/Programowanie/C++/Języki i Narzędzia Programowania/JNP3/tz336079+mb333878/sejf.cc
+sejf.h
+/home/tommalla/Programowanie/C++/Języki i Narzędzia Programowania/JNP3/tz336079+mb333878/sejf.h
+kontroler.h
+/home/tommalla/Programowanie/C++/Języki i Narzędzia Programowania/JNP3/tz336079+mb333878/kontroler.h
+
+/home/tommalla/Programowanie/C++/Języki i Narzędzia Programowania/JNP3/tz336079+mb333878/sejf.h
+string
+-
+kontroler.h
+/home/tommalla/Programowanie/C++/Języki i Narzędzia Programowania/JNP3/tz336079+mb333878/kontroler.h
+

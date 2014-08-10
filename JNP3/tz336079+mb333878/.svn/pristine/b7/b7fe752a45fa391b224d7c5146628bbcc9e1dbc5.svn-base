@@ -1,0 +1,25 @@
+/**
+ * Tomasz Zakrzewski i Mateusz Bałasz
+ * Trzecie zadanie z JNP
+ */
+#ifndef KONTROLER_H
+#define KONTROLER_H
+#include <ostream>
+#include "sejf.h"
+
+class Kontroler {
+	public:
+		friend class Sejf;
+		//TODO operator>>
+
+		explicit operator bool() const;
+
+		std::ostream& operator<<(std::ostream& output);
+	private:
+		const Sejf& sejf;
+
+		Kontroler(const Sejf& sejf);
+		~Kontroler();
+};
+
+#endif

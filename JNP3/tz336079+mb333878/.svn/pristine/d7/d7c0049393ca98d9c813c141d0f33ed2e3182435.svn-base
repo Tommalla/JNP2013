@@ -1,0 +1,32 @@
+#include <iostream>
+#include "sejf.h"
+
+using namespace std;
+
+int main(int argc, char **argv) {
+	Sejf s1("abc123", 2);
+	Sejf s2("aaa", 2);
+
+
+	cout << s1[2] << ' ' << s2[2] << '\n';
+	cout << s1.kontroler() << s2.kontroler();
+
+	swap(s1, s2);
+	s1 *= 2;	//zmanipulowany
+
+	cout << s1.kontroler() << s2.kontroler();
+	cout << s1[2] << ' ' << s2[2] << '\n';
+	s2 *= 3;
+	cout << s1.kontroler() << s2.kontroler();
+	cout << s2[2] << '\n';
+	cout << s2.kontroler();
+
+	auto k1 = s1.kontroler();
+	auto k2 = s1.kontroler();
+	cout << k1 << "test\n";
+	cout << k2 << "test2\n";
+	cout << s1[2] << "\n";
+	cout << s1[2] << "\n";
+	cout << k1 << k2;
+	return 0;
+}

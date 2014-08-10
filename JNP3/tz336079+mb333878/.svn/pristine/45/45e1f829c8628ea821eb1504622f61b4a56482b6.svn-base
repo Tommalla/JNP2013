@@ -1,0 +1,13 @@
+#include <iostream>
+#include "sejf.h"
+
+using namespace std;
+
+int main(int argc, char **argv) {
+	Sejf s1("abc123", 2);
+	Sejf s2("aaa", 2);
+	cout << s1[2] << ' ' << s2[2] << '\n';
+	swap(s1, s2);
+	cout << s1[2] << ' ' << s2[2] << '\n';
+    return 0;
+}

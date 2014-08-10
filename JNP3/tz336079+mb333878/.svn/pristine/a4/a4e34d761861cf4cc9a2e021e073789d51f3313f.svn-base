@@ -1,0 +1,57 @@
+#include <iostream>
+#include "sejf.h"
+
+using namespace std;
+
+int main(int argc, char **argv) {
+	// ---------- Zamiana sejfów ----------
+	// Trzeba przekazać również status przy swapie
+	// Sejf a("A", 1), b("B", 1);
+	// b += 1;
+	// auto k = b.kontroler();
+	// a[0]; a[0];
+	// std::swap(a, b);
+	// cout << k;
+
+	// ---------- Zamiana sejfów 2 ----------
+	// w operator bool() trzeba sprawdzać czy numOfAttempts jest niezerowe
+	// 	Sejf s1("aaa", 1), s2("bbb", 0);
+	//
+	// auto k1 = s1.kontroler();
+	//
+	// swap(s1, s2);
+	//
+	// if(k1) cout << "k1 wciąż związany z sejfem z aaa" << endl;
+	//
+	// else cout << "k1 związany z sejfem z bbb" << endl;
+
+	Sejf s1("abc123", 2);
+	Sejf s2("aaa", 2);
+
+
+	cout << s1[2] << ' ' << s2[2] << '\n';
+	cout << s1.kontroler() << s2.kontroler();
+
+	swap(s1, s2);
+	s1 *= 2;	//zmanipulowany
+
+	cout << s1.kontroler() << s2.kontroler();
+	cout << s1[2] << ' ' << s2[2] << '\n';
+	s2 *= 3;
+	cout << s1.kontroler() << s2.kontroler();
+	cout << s2[2] << '\n';
+	cout << s2.kontroler();
+
+	auto k1 = s1.kontroler();
+	auto k2 = s1.kontroler();
+	cout << k1 << "test\n";
+	cout << k2 << "test2\n";
+	cout << s1[2] << "\n";
+	cout << s1[2] << "\n";
+	cout << k1 << k2;
+	s1 += 5;
+	cout << k1;
+	
+
+	return 0;
+}
