@@ -6,6 +6,7 @@ example
 network_test1
 network_test2
 private/42
+build
 
 #KDevelop
 *.kdev*
