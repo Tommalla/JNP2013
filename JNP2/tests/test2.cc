@@ -1,12 +1,14 @@
-//Test dzialania sieci growingnet
+//Test dzialania sieci growing (nie growingnet)
 #include <assert.h>
 #include <stdio.h>
 #include <string>
-#include "network.h"
-#include "growingnet.h"
+#include "../network.h"
+#include "../growingnet.h"
 
 int main()
 {
+	int growingnet = network_new(1);
+	
     network_add_link(growingnet, "0", "0");
     assert(network_nodes_number(growingnet) == 1);
     assert(network_links_number(growingnet) == 1);

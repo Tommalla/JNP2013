@@ -2,8 +2,8 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string>
-#include "network.h"
-#include "growingnet.h"
+#include "../network.h"
+#include "../growingnet.h"
 
 int main()
 {
